@@ -21,6 +21,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install system libs (WeasyPrint/Pillow)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libpangoft2-1.0-0 \
+            libcairo2 libjpeg62-turbo zlib1g shared-mime-info
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -42,8 +48,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Validate vercel.json
         run: python -c "import json; json.load(open('vercel.json')); print('vercel.json OK')"
       - name: Validate render.yaml
-        run: python -c "import yaml" 2>/dev/null || pip install pyyaml -q; python -c "import yaml; yaml.safe_load(open('render.yaml')); print('render.yaml OK')"
+        run: pip install pyyaml -q; python -c "import yaml; yaml.safe_load(open('render.yaml')); print('render.yaml OK')"
 
