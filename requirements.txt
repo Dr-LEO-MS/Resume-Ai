@@ -3,7 +3,7 @@
 # starlette release that isn't compatible with this fastapi version and the
 # app fails to start with a TemplateResponse/routing error.
 fastapi==0.115.0
-a2wsgi==0.10.0  # ASGI->WSGI bridge for Vercel serverless Python runtime
+a2wsgi==1.10.10  # ASGI->WSGI bridge for Vercel serverless Python runtime
 uvicorn[standard]==0.30.6
 jinja2==3.1.4
 python-multipart==0.0.9
