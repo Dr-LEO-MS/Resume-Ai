@@ -1,0 +1,17 @@
+{
+  "id": "executive",
+  "name": "Executive",
+  "tags": [
+    "executive",
+    "professional"
+  ],
+  "desc": "Polished two-tone design for senior professionals and leadership roles.",
+  "category": "Professional",
+  "is_featured": false,
+  "style": {
+    "font_family": "Georgia, serif",
+    "primary_color": "#1a365d",
+    "layout": "two_column"
+  },
+  "enabled": true
+}

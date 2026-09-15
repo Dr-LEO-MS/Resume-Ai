@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <span class="admin-badge">⚡ Admin</span>
+      </div>
+      <div class="admin-role-chip" id="admin-role-chip" title="Your role's permissions are enforced server-side">
+        <span class="text-muted">Your role:</span>
+        <span class="role-badge role-user" id="admin-role-badge">…</span>
+      </div>
+      <nav class="admin-nav">
+        <a href="#" class="admin-nav-item is-active" data-section="dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="admin-nav-item" data-section="users">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Users
+        </a>
+        <a href="#" class="admin-nav-item" data-section="resumes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Resumes
+        </a>
+        <a href="#" class="admin-nav-item" data-section="templates">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Templates
+        </a>
+        <a href="#" class="admin-nav-item" data-section="settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </a>
+        <a href="#" class="admin-nav-item" data-section="auditlog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          Audit Log
+        </a>
+        <a href="#" class="admin-nav-item" data-section="ipallowlist">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          IP Allowlist
+        </a>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <a href="/dashboard" class="btn btn-ghost btn-sm btn-block">← Back to app</a>
+      </div>
+    </aside>
+
+    <main class="admin-main" id="main">
+      <!-- Dashboard Section -->
+      <section class="admin-section" id="section-dashboard">
+        <h1 class="h2">Admin Dashboard</h1>
+        <p class="text-muted admin-section-subtitle">Overview of your platform activity</p>
+
+        <div class="admin-stats-grid" id="stats-grid">
+          <div class="admin-stat-card">
+            <div class="admin-stat-value" id="stat-users">—</div>
+            <div class="admin-stat-label">Total Users</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-value" id="stat-resumes">—</div>
+            <div class="admin-stat-label">Total Resumes</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-value" id="stat-free">—</div>
+            <div class="admin-stat-label">Free Plan</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-value" id="stat-pro">—</div>
+            <div class="admin-stat-label">Pro Plan</div>
+          </div>
+        </div>
+
+        <div class="admin-panel mt-5">
+          <div class="row justify-between align-center">
+            <div>
+              <h3>Plan Expiry Sweep</h3>
+              <p class="text-muted text-sm">Sends renewal-reminder emails to Pro users expiring soon, and downgrades any Pro accounts whose plan has already expired to Free. Run manually here, or on a schedule (see README).</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="run-expiry-check-btn">Run expiry check now</button>
+          </div>
+          <div id="expiry-check-result" class="text-muted text-sm mt-3 d-none"></div>
+        </div>
+
+        <div class="row justify-between align-center mt-5">
+          <h3 style="margin:0">Plan Expiry</h3>
+          <button class="btn btn-ghost btn-sm" id="check-expiring-plans-btn">🔔 Check &amp; notify expiring Pro plans</button>
+        </div>
+        <p class="text-muted text-sm" id="check-expiring-plans-result"></p>
+
+        <div class="admin-panel mt-5">
+          <h3>Recent Users</h3>
+          <table class="admin-table" id="recent-users-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Plan</th><th>Role</th><th>Joined</th></tr>
+            </thead>
+            <tbody id="recent-users-body">
+              <tr><td colspan="5" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Users Section -->
+      <section class="admin-section d-none" id="section-users">
+        <div class="row justify-between flex-wrap gap-4">
+          <h1 class="h2">Manage Users</h1>
+          <div class="row gap-4 flex-wrap">
+            <label class="row gap-2 align-center" style="font-size:var(--text-sm);white-space:nowrap">
+              <input type="checkbox" id="users-show-deleted"> Show deleted users
+            </label>
+            <div class="field mb-0">
+              <input type="search" id="user-search" placeholder="Search users…" class="search-input-md">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel mt-5">
+          <table class="admin-table" id="users-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Plan</th><th>Role</th><th>Resumes</th><th>Joined</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="users-body">
+              <tr><td colspan="8" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="admin-pagination" id="users-pagination"></div>
+        </div>
+      </section>
+
+      <!-- Resumes Section -->
+      <section class="admin-section d-none" id="section-resumes">
+        <div class="row justify-between flex-wrap gap-4">
+          <h1 class="h2">All Resumes</h1>
+          <div class="row gap-4 flex-wrap">
+            <label class="row gap-2 align-center" style="font-size:var(--text-sm);white-space:nowrap">
+              <input type="checkbox" id="resumes-show-deleted"> Show deleted resumes
+            </label>
+            <div class="field mb-0">
+              <input type="search" id="resume-search" placeholder="Search resumes…" class="search-input-md">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel mt-5">
+          <table class="admin-table" id="resumes-table">
+            <thead>
+              <tr><th>Resume Name</th><th>Template</th><th>Owner</th><th>Last Updated</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="resumes-body">
+              <tr><td colspan="6" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="admin-pagination" id="resumes-pagination"></div>
+        </div>
+      </section>
+
+      <!-- Templates Section -->
+      <section class="admin-section d-none" id="section-templates">
+        <h1 class="h2">Manage Templates</h1>
+        <p class="text-muted admin-section-subtitle">Enable/disable, reorder, and edit each template's name, colors, and fonts. Changes apply everywhere (gallery, builder, PDF/DOCX export) immediately.</p>
+
+        <div class="admin-panel mt-5">
+          <table class="admin-table" id="templates-table">
+            <thead>
+              <tr><th>Order</th><th>Template</th><th>Category</th><th>Primary Color</th><th>Featured</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="templates-body">
+              <tr><td colspan="7" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="admin-section d-none" id="section-settings">
+        <h1 class="h2">Site Settings</h1>
+        <p class="text-muted admin-section-subtitle">Every one of these takes effect on the live site immediately — no redeploy needed.</p>
+
+        <form id="settings-form">
+          <div class="admin-panel mt-5">
+            <h3>Site Content</h3>
+            <div class="field"><label for="s-site-name">Site name</label><input type="text" id="s-site-name" data-group="site" data-key="site_name"></div>
+            <div class="field"><label for="s-hero-headline">Hero headline</label><input type="text" id="s-hero-headline" data-group="site" data-key="hero_headline"></div>
+            <div class="field"><label for="s-hero-sub">Hero subheadline</label><textarea id="s-hero-sub" data-group="site" data-key="hero_subheadline"></textarea></div>
+            <div class="field"><label for="s-footer-tagline">Footer tagline</label><input type="text" id="s-footer-tagline" data-group="site" data-key="footer_tagline"></div>
+            <div class="field-row">
+              <div class="field"><label for="s-contact-email">Contact email</label><input type="email" id="s-contact-email" data-group="site" data-key="contact_email"></div>
+              <div class="field"><label for="s-support-email">Support email</label><input type="email" id="s-support-email" data-group="site" data-key="support_email"></div>
+            </div>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="site">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="site">Save Site Content</button>
+            </div>
+          </div>
+
+          <div class="admin-panel mt-5">
+            <h3>Branding</h3>
+            <div class="field-row">
+              <div class="field"><label for="s-logo-text">Logo text</label><input type="text" id="s-logo-text" data-group="branding" data-key="logo_text"></div>
+              <div class="field"><label for="s-primary-color">Primary color</label><input type="color" id="s-primary-color" data-group="branding" data-key="primary_color"></div>
+            </div>
+            <div class="field"><label for="s-accent-color">Accent color</label><input type="color" id="s-accent-color" data-group="branding" data-key="accent_color"></div>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="branding">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="branding">Save Branding</button>
+            </div>
+          </div>
+
+          <div class="admin-panel mt-5">
+            <h3>Plan Limits</h3>
+            <div class="field-row">
+              <div class="field"><label for="s-free-resume-limit">Free plan: resume limit</label><input type="number" min="0" id="s-free-resume-limit" data-group="plan_limits" data-key="free_resume_limit"></div>
+              <div class="field"><label for="s-free-cl-limit">Free plan: cover letter limit</label><input type="number" min="0" id="s-free-cl-limit" data-group="plan_limits" data-key="free_cover_letter_limit"></div>
+            </div>
+            <p class="field-hint">Pro and Teams plans are always unlimited. This only controls the Free tier cap.</p>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="plan_limits">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="plan_limits">Save Plan Limits</button>
+            </div>
+          </div>
+
+          <div class="admin-panel mt-5">
+            <h3>Pricing Display</h3>
+            <p class="field-hint">These are display-only labels shown on /pricing — this app has no payment processor wired in, so changing these doesn't change what anyone is billed.</p>
+            <div class="field-row">
+              <div class="field"><label for="s-free-price">Free price label</label><input type="text" id="s-free-price" data-group="pricing" data-key="free_price"></div>
+              <div class="field"><label for="s-pro-price">Pro price label</label><input type="text" id="s-pro-price" data-group="pricing" data-key="pro_price"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="s-pro-period">Pro price period</label><input type="text" id="s-pro-period" data-group="pricing" data-key="pro_period"></div>
+              <div class="field"><label for="s-teams-price">Teams price label</label><input type="text" id="s-teams-price" data-group="pricing" data-key="teams_price"></div>
+            </div>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="pricing">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="pricing">Save Pricing</button>
+            </div>
+          </div>
+
+          <div class="admin-panel mt-5">
+            <h3>Feature Flags</h3>
+            <p class="field-hint">Disabling a feature here blocks it server-side for every user immediately, not just in the UI.</p>
+            <div class="settings-toggle-list">
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="ai_review_enabled"> AI Review</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="ai_enhance_enabled"> AI Enhance</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="cover_letters_enabled"> Cover letters</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="sharing_enabled"> Public share links</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="registration_enabled"> New user registration</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="pdf_export_enabled"> PDF export</label>
+              <label class="row gap-2 toggle-row"><input type="checkbox" data-group="features" data-key="docx_export_enabled"> Word (.docx) export</label>
+            </div>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="features">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="features">Save Feature Flags</button>
+            </div>
+          </div>
+
+          <div class="admin-panel mt-5">
+            <h3>Outbound Email (SMTP)</h3>
+            <p class="field-hint">Used for password-reset and plan-expiry emails. Leave blank to fall back to server environment variables, or log emails locally in development.</p>
+            <div class="field-row">
+              <div class="field"><label for="s-smtp-host">SMTP host</label><input type="text" id="s-smtp-host" data-group="email" data-key="smtp_host" placeholder="smtp.example.com"></div>
+              <div class="field"><label for="s-smtp-port">SMTP port</label><input type="number" id="s-smtp-port" data-group="email" data-key="smtp_port"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="s-smtp-user">SMTP username</label><input type="text" id="s-smtp-user" data-group="email" data-key="smtp_user"></div>
+              <div class="field"><label for="s-smtp-password">SMTP password</label><input type="password" id="s-smtp-password" data-group="email" data-key="smtp_password" placeholder="Leave as-is to keep current password"></div>
+            </div>
+            <div class="field"><label for="s-smtp-from">From address</label><input type="email" id="s-smtp-from" data-group="email" data-key="smtp_from"></div>
+            <div class="row gap-2 mt-3">
+              <button type="button" class="btn btn-ghost btn-sm" data-history-group="email">📜 History</button>
+              <button type="button" class="btn btn-primary btn-sm" data-save-group="email">Save Email Settings</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Audit Log Section -->
+      <section class="admin-section d-none" id="section-auditlog">
+        <h1 class="h2">Audit Log</h1>
+        <p class="text-muted admin-section-subtitle">A record of every admin action — settings changes, plan/role changes, deletions. Each entry records the acting admin's IP and, where captured, the before/after state.</p>
+
+        <div class="row gap-2 flex-wrap mt-2 mb-4">
+          <div class="field mb-0 flex-1" style="min-width:220px">
+            <input type="search" id="audit-action-filter" placeholder="Filter by action… (e.g. user, settings)" class="search-input-md">
+          </div>
+          <div class="field mb-0 flex-1" style="min-width:220px">
+            <input type="search" id="audit-actor-filter" placeholder="Filter by admin…" class="search-input-md">
+          </div>
+        </div>
+
+        <div class="admin-panel mt-5">
+          <table class="admin-table" id="auditlog-table">
+            <thead>
+              <tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th><th>IP</th><th>State</th><th>Details</th></tr>
+            </thead>
+            <tbody id="auditlog-body">
+              <tr><td colspan="7" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="admin-pagination" id="auditlog-pagination"></div>
+        </div>
+      </section>
+
+      <!-- IP Allowlist Section -->
+      <section class="admin-section d-none" id="section-ipallowlist">
+        <h1 class="h2">IP Allowlist</h1>
+        <p class="text-muted admin-section-subtitle">When one or more IPs are added below, admin access is restricted to those IP addresses only. While the list is empty, all admin users can sign in from any IP.</p>
+
+        <div class="allowlist-status-banner is-inactive" id="allowlist-status">
+          <span class="status-dot">•</span>
+          <span id="allowlist-status-text">Checking status…</span>
+        </div>
+
+        <div class="admin-panel mt-5" id="ip-allowlist-add-panel">
+          <h3>Add Allowed IP</h3>
+          <div class="row gap-2 flex-wrap align-center">
+            <div class="field mb-0" style="min-width:220px">
+              <label for="ip-address-input">IP address <span class="text-muted" style="font-weight:400">(IPv4 or IPv6)</span></label>
+              <input type="text" id="ip-address-input" placeholder="e.g. 203.0.113.10">
+            </div>
+            <div class="field mb-0" style="min-width:220px">
+              <label for="ip-label-input">Label <span class="text-muted" style="font-weight:400">(optional)</span></label>
+              <input type="text" id="ip-label-input" placeholder="e.g. Office VPN">
+            </div>
+            <button class="btn btn-primary btn-sm" id="ip-add-btn">Add IP</button>
+          </div>
+          <div id="ip-add-error" class="text-muted text-sm mt-2"></div>
+        </div>
+
+        <div class="admin-panel mt-5">
+          <table class="admin-table" id="ip-allowlist-table">
+            <thead>
+              <tr><th>IP Address</th><th>Label</th><th>Added By</th><th>Date Added</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="ip-allowlist-body">
+              <tr><td colspan="5" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div class="modal-overlay d-none" id="edit-user-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Edit User</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="edit-user-form">
+        <input type="hidden" id="edit-user-id">
+        <div class="field">
+          <label for="edit-name">Full Name</label>
+          <input type="text" id="edit-name">
+        </div>
+        <div class="field">
+          <label for="edit-email">Email</label>
+          <input type="email" id="edit-email">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="edit-plan">Plan</label>
+            <select id="edit-plan">
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="teams">Teams</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="edit-role">Role</label>
+            <select id="edit-role">
+              <option value="user">User</option>
+              <option value="viewer">Viewer</option>
+              <option value="moderator">Moderator</option>
+              <option value="content_manager">Content Manager</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+            <p class="field-hint" id="edit-role-hint" style="display:none">Only Super Admins can modify roles.</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="edit-password">New Password <span class="text-muted">(leave blank to keep current)</span></label>
+          <input type="password" id="edit-password" placeholder="••••••••••••••" minlength="14">
+        </div>
+        <div class="row gap-4 justify-end mt-4">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Audit Diff Modal -->
+  <div class="modal-overlay d-none" id="audit-diff-modal">
+    <div class="modal-card" style="max-width:860px">
+      <div class="modal-header">
+        <h3>State Snapshot</h3>
+        <button class="modal-close" onclick="closeDiffModal()">&times;</button>
+      </div>
+      <p class="text-muted text-sm" id="audit-diff-meta"></p>
+      <div class="diff-grid" id="audit-diff-grid"></div>
+    </div>
+  </div>
+
+  <!-- Config History Modal -->
+  <div class="modal-overlay d-none" id="config-history-modal">
+    <div class="modal-card" style="max-width:720px">
+      <div class="modal-header">
+        <h3 id="config-history-title">Configuration History</h3>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <p class="text-muted text-sm">Every save snapshots the full group. Revert to roll the configuration back to a previous state — the revert is itself logged and versioned.</p>
+      <div id="config-history-list" class="mt-3"></div>
+      <div class="admin-pagination" id="config-history-pagination"></div>
+    </div>
+  </div>
+
+  <!-- Generic Confirm Modal -->
+  <div class="modal-overlay d-none" id="confirm-modal">
+    <div class="modal-card" style="max-width:460px">
+      <div class="modal-header">
+        <h3 id="confirm-title">Are you sure?</h3>
+        <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+      </div>
+      <p class="text-muted" id="confirm-message"></p>
+      <div class="row gap-4 justify-end mt-4">
+        <button type="button" class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  {% include "_footer.html" %}
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script>
+  (function() {
+    // Guard: must be admin
+    if (!Auth.requireAuth()) return;
+    if (!Auth.requireAdmin()) return;
+
+    let currentUsersPage = 1;
+    let currentResumesPage = 1;
+
+    // ---- RBAC state -------------------------------------------------------
+    const AdminState = {
+      role: null,
+      currentUser: Auth.getUser(),
+      permissions: new Set(),
+      has(perm) { return this.permissions.has(perm); },
+    };
+
+    async function loadPermissions() {
+      try {
+        const res = await Auth.apiFetch('/api/admin/rbac/permissions');
+        if (!res.ok) return;
+        const data = await res.json();
+        AdminState.role = data.current_role;
+        AdminState.permissions = new Set(data.permissions);
+        const badge = document.getElementById('admin-role-badge');
+        badge.className = `role-badge role-${data.current_role}`;
+        badge.textContent = data.current_role.replace(/_/g, ' ');
+        // Gate role editing by `roles.write` (Super Admin only)
+        const roleSelect = document.getElementById('edit-role');
+        const roleHint = document.getElementById('edit-role-hint');
+        const canEditRoles = AdminState.has('roles.write');
+        if (!canEditRoles) {
+          roleSelect.disabled = true;
+          roleHint.style.display = 'block';
+        }
+        applyPermissionGating();
+      } catch (err) {
+        console.error('Could not load permissions:', err);
+      }
+    }
+
+    function applyPermissionGating() {
+      document.querySelectorAll('[data-perm]').forEach(el => {
+        const needed = el.dataset.perm;
+        const hidden = !AdminState.has(needed);
+        el.style.display = hidden ? 'none' : '';
+      });
+    }
+
+    // ---- Navigation --------------------------------------------------------
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    const sections = document.querySelectorAll('.admin-section');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = item.dataset.section;
+        navItems.forEach(n => n.classList.remove('is-active'));
+        item.classList.add('is-active');
+        // Toggle the .d-none class rather than inline display: every section
+        // except the Dashboard carries `d-none { display:none !important }`,
+        // so setting an inline `display` value can't override it and the
+        // clicked tab would stay invisible. classList.toggle handles it both
+        // directions correctly (and the Dashboard, which starts visible, gets
+        // the class added whenever you navigate away from it).
+        sections.forEach(s => s.classList.toggle('d-none', s.id !== `section-${target}`));
+        if (target === 'users') loadUsers();
+        if (target === 'resumes') loadResumes();
+        if (target === 'templates') loadTemplates();
+        if (target === 'settings') loadSettings();
+        if (target === 'auditlog') loadAuditLog();
+        if (target === 'ipallowlist') loadIpAllowlist();
+      });
+    });
+
+    // ---- Dashboard Stats ---------------------------------------------------
+    async function loadStats() {
+      try {
+        const res = await Auth.apiFetch('/api/admin/stats');
+        if (!res.ok) throw new Error('Failed to load stats');
+        const data = await res.json();
+
+        document.getElementById('stat-users').textContent = data.total_users;
+        document.getElementById('stat-resumes').textContent = data.total_resumes;
+        document.getElementById('stat-free').textContent = data.plan_counts.free || 0;
+        document.getElementById('stat-pro').textContent = (data.plan_counts.pro || 0) + (data.plan_counts.teams || 0);
+
+        const tbody = document.getElementById('recent-users-body');
+        if (data.recent_users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-muted">No users yet</td></tr>';
+        } else {
+          tbody.innerHTML = data.recent_users.map(u => `
+            <tr>
+              <td>${esc(u.full_name || '—')}</td>
+              <td>${esc(u.email)}</td>
+              <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
+              <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+              <td>${formatDate(u.created_at)}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Stats error:', err);
+      }
+    }
+
+    // ---- Users -------------------------------------------------------------
+    async function loadUsers(page = 1, search = '') {
+      currentUsersPage = page;
+      const showDeleted = document.getElementById('users-show-deleted').checked;
+      const url = `/api/admin/users?page=${page}&per_page=15&include_deleted=${showDeleted}${search ? '&search=' + encodeURIComponent(search) : ''}`;
+      try {
+        const res = await Auth.apiFetch(url);
+        if (!res.ok) throw new Error('Failed to load users');
+        const data = await res.json();
+
+        const tbody = document.getElementById('users-body');
+        if (data.users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-muted">No users found</td></tr>';
+        } else {
+          tbody.innerHTML = data.users.map(u => `
+            <tr class="${u.is_deleted ? 'row-deleted' : ''}">
+              <td>${esc(u.full_name || '—')}</td>
+              <td>${esc(u.email)}</td>
+              <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
+              <td><span class="role-badge role-${u.role}">${u.role.replace(/_/g, ' ')}</span></td>
+              <td>${u.resume_count}</td>
+              <td>${formatDate(u.created_at)}</td>
+              <td class="text-muted" style="font-size:var(--text-xs)">
+                ${u.is_deleted ? '<span class="badge-deleted">Deleted</span>' : '<span class="status-badge enabled">Active</span>'}
+              </td>
+              <td class="admin-actions">
+                ${u.is_deleted
+                  ? `<button class="btn btn-ghost btn-sm" onclick="restoreUser('${u.id}')">Restore</button>
+                     <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="purgeUser('${u.id}','${esc(u.email)}')">Purge</button>`
+                  : `<button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">Edit</button>
+                     <button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="deleteUser('${u.id}','${esc(u.email)}')">Delete</button>`}
+              </td>
+            </tr>
+          `).join('');
+        }
+        renderPagination('users-pagination', data.total, data.page, data.per_page, (p) => loadUsers(p, search));
+      } catch (err) {
+        console.error('Users error:', err);
+      }
+    }
+
+    // Search with debounce
+    let userSearchTimeout;
+    document.getElementById('user-search').addEventListener('input', (e) => {
+      clearTimeout(userSearchTimeout);
+      userSearchTimeout = setTimeout(() => loadUsers(1, e.target.value), 300);
+    });
+
+    document.getElementById('users-show-deleted').addEventListener('change', () => loadUsers(1));
+
+    window.restoreUser = async function(userId) {
+      try {
+        const res = await Auth.apiFetch(`/api/admin/users/${userId}/restore`, { method: 'POST' });
+        if (!res.ok) throw new Error('Restore failed');
+        loadUsers(currentUsersPage);
+        loadStats();
+        showToast('User restored');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    window.purgeUser = async function(userId, email) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Permanently purge?',
+        message: `Permanently purge user "${email}" and all their data? This CANNOT be undone.`,
+        confirmText: 'Yes, Purge!',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Permanently purge user "${email}"? This CANNOT be undone.`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/users/${userId}?permanent=true`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Purge failed');
+        loadUsers(currentUsersPage);
+        loadStats();
+        showToast('User permanently purged');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    // ---- Edit User ---------------------------------------------------------
+    window.editUser = async function(userId) {
+      try {
+        const res = await Auth.apiFetch(`/api/admin/users/${userId}`);
+        if (!res.ok) throw new Error('Failed to load user');
+        const user = await res.json();
+
+        document.getElementById('edit-user-id').value = user.id;
+        document.getElementById('edit-name').value = user.full_name || '';
+        document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-plan').value = user.plan;
+        document.getElementById('edit-role').value = user.role;
+        document.getElementById('edit-password').value = '';
+
+        // The overlay carries `d-none { display:none !important }`, so an
+        // inline `display` value can't reveal it — remove the class to show.
+        document.getElementById('edit-user-modal').classList.remove('d-none');
+      } catch (err) {
+        alert('Error loading user: ' + err.message);
+      }
+    };
+
+    window.closeModal = function() {
+      // Re-hide via the class (see editUser note): the `!important` on .d-none
+      // is the source of truth for hiding.
+      document.getElementById('edit-user-modal').classList.add('d-none');
+    };
+
+    document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userId = document.getElementById('edit-user-id').value;
+      const payload = {
+        full_name: document.getElementById('edit-name').value,
+        email: document.getElementById('edit-email').value,
+        plan: document.getElementById('edit-plan').value,
+        role: document.getElementById('edit-role').value,
+      };
+      const pw = document.getElementById('edit-password').value;
+      if (pw) payload.password = pw;
+
+      try {
+        const res = await Auth.apiFetch(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          body: payload,
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Update failed');
+        }
+        closeModal();
+        loadUsers(currentUsersPage);
+        showToast('User updated successfully');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+    // ---- Delete User -------------------------------------------------------
+    window.deleteUser = async function(userId, email) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Soft-delete user',
+        message: `Soft-delete user "${email}"? They'll be hidden from the default view and unable to sign in, but can be restored or purged later.`,
+        confirmText: 'Yes, Delete',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Soft-delete user "${email}"? They can be restored or purged later.`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Delete failed');
+        }
+        loadUsers(currentUsersPage);
+        loadStats();
+        showToast('User soft-deleted');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    // ---- Resumes -----------------------------------------------------------
+    async function loadResumes(page = 1, search = '') {
+      currentResumesPage = page;
+      const showDeleted = document.getElementById('resumes-show-deleted').checked;
+      const url = `/api/admin/resumes?page=${page}&per_page=15&include_deleted=${showDeleted}${search ? '&search=' + encodeURIComponent(search) : ''}`;
+      try {
+        const res = await Auth.apiFetch(url);
+        if (!res.ok) throw new Error('Failed to load resumes');
+        const data = await res.json();
+
+        const tbody = document.getElementById('resumes-body');
+        if (data.resumes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-muted">No resumes found</td></tr>';
+        } else {
+          tbody.innerHTML = data.resumes.map(r => `
+            <tr class="${r.is_deleted ? 'row-deleted' : ''}">
+              <td>${esc(r.name)}</td>
+              <td><span class="plan-badge">${r.template}</span></td>
+              <td>${esc(r.owner_name || '—')} <span class="text-muted" style="font-size:var(--text-xs)">${esc(r.owner_email || '')}</span></td>
+              <td>${formatDate(r.updated_at)}</td>
+              <td class="text-muted" style="font-size:var(--text-xs)">
+                ${r.is_deleted ? '<span class="badge-deleted">Deleted</span>' : '<span class="status-badge enabled">Active</span>'}
+              </td>
+              <td class="admin-actions">
+                ${r.is_deleted
+                  ? `<button class="btn btn-ghost btn-sm" onclick="restoreResume('${r.id}')">Restore</button>
+                     <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="purgeResume('${r.id}','${esc(r.name)}')">Purge</button>`
+                  : `<button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="deleteResume('${r.id}','${esc(r.name)}')">Delete</button>`}
+              </td>
+            </tr>
+          `).join('');
+        }
+        renderPagination('resumes-pagination', data.total, data.page, data.per_page, (p) => loadResumes(p, search));
+      } catch (err) {
+        console.error('Resumes error:', err);
+      }
+    }
+
+    let resumeSearchTimeout;
+    document.getElementById('resume-search').addEventListener('input', (e) => {
+      clearTimeout(resumeSearchTimeout);
+      resumeSearchTimeout = setTimeout(() => loadResumes(1, e.target.value), 300);
+    });
+
+    document.getElementById('resumes-show-deleted').addEventListener('change', () => loadResumes(1));
+
+    window.deleteResume = async function(resumeId, name) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Soft-delete resume',
+        message: `Soft-delete resume "${name}"? It will be hidden from the default view and can be restored or purged later.`,
+        confirmText: 'Yes, Delete',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Soft-delete resume "${name}"?`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/resumes/${resumeId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        loadResumes(currentResumesPage);
+        loadStats();
+        showToast('Resume soft-deleted');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    window.restoreResume = async function(resumeId) {
+      try {
+        const res = await Auth.apiFetch(`/api/admin/resumes/${resumeId}/restore`, { method: 'POST' });
+        if (!res.ok) throw new Error('Restore failed');
+        loadResumes(currentResumesPage);
+        loadStats();
+        showToast('Resume restored');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    window.purgeResume = async function(resumeId, name) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Permanently purge?',
+        message: `Permanently purge resume "${name}"? This CANNOT be undone.`,
+        confirmText: 'Yes, Purge!',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Permanently purge resume "${name}"? This CANNOT be undone.`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/resumes/${resumeId}?permanent=true`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Purge failed');
+        loadResumes(currentResumesPage);
+        loadStats();
+        showToast('Resume permanently purged');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    // ---- Templates ------------------------------------------------------------
+    async function loadTemplates() {
+      const tbody = document.getElementById('templates-body');
+      try {
+        const res = await Auth.apiFetch('/api/admin/templates');
+        const list = await res.json();
+        const sorted = [...list].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+        tbody.innerHTML = sorted.map((t, i) => `
+          <tr data-template-id="${t.id}">
+            <td>
+              <button class="icon-btn" onclick="moveTemplate('${t.id}', -1)" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
+              <button class="icon-btn" onclick="moveTemplate('${t.id}', 1)" ${i === sorted.length - 1 ? 'disabled' : ''} title="Move down">↓</button>
+            </td>
+            <td><strong>${esc(t.name)}</strong><div class="text-muted" style="font-size:11px">${t.id}</div></td>
+            <td>${esc(t.category || '—')}</td>
+            <td><span class="color-swatch" style="background:${(t.style && t.style.primary_color) || '#ccc'}"></span>${(t.style && t.style.primary_color) || '—'}</td>
+            <td>${t.is_featured ? '⭐' : ''}</td>
+            <td><span class="status-badge ${t.enabled !== false ? 'enabled' : 'disabled'}">${t.enabled !== false ? 'Enabled' : 'Disabled'}</span></td>
+            <td class="row gap-2">
+              <button class="btn btn-ghost btn-sm" onclick="editTemplate('${t.id}')">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="toggleTemplate('${t.id}', ${t.enabled === false})">${t.enabled !== false ? 'Disable' : 'Enable'}</button>
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Error loading templates.</td></tr>`;
+      }
+    }
+
+    window.toggleTemplate = async function(id, enable) {
+      await Auth.apiFetch(`/api/admin/templates/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: enable }),
+      });
+      loadTemplates();
+      showToast(enable ? 'Template enabled' : 'Template disabled');
+    };
+
+    window.moveTemplate = async function(id, direction) {
+      const rows = [...document.querySelectorAll('#templates-body tr')];
+      const ids = rows.map(r => r.dataset.templateId);
+      const idx = ids.indexOf(id);
+      const swapWith = idx + direction;
+      if (swapWith < 0 || swapWith >= ids.length) return;
+      [ids[idx], ids[swapWith]] = [ids[swapWith], ids[idx]];
+      await Auth.apiFetch('/api/admin/templates/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ids),
+      });
+      loadTemplates();
+    };
+
+    window.editTemplate = async function(id) {
+      const res = await Auth.apiFetch(`/api/admin/templates`);
+      const list = await res.json();
+      const t = list.find(x => x.id === id);
+      if (!t) return;
+      const newName = prompt('Template name:', t.name);
+      if (newName === null) return;
+      const newColor = prompt('Primary color (hex, e.g. #5b5bd6):', (t.style && t.style.primary_color) || '#5b5bd6');
+      if (newColor === null) return;
+      const newFont = prompt("Font family (CSS stack, e.g. Georgia, serif):", (t.style && t.style.font_family) || 'Georgia, serif');
+      if (newFont === null) return;
+      await Auth.apiFetch(`/api/admin/templates/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, style: { primary_color: newColor, font_family: newFont } }),
+      });
+      loadTemplates();
+      showToast('Template updated');
+    };
+
+    // ---- Settings ---------------------------------------------------------
+    async function loadSettings() {
+      try {
+        const res = await Auth.apiFetch('/api/admin/settings');
+        const settings = await res.json();
+        document.querySelectorAll('#settings-form [data-group][data-key]').forEach(el => {
+          const group = el.dataset.group, key = el.dataset.key;
+          const value = settings[group] ? settings[group][key] : undefined;
+          if (value === undefined) return;
+          if (el.type === 'checkbox') el.checked = !!value;
+          else el.value = value;
+        });
+      } catch (err) {
+        console.error('Could not load settings:', err);
+      }
+    }
+
+    document.querySelectorAll('[data-save-group]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const group = btn.dataset.saveGroup;
+        const updates = {};
+        document.querySelectorAll(`#settings-form [data-group="${group}"]`).forEach(el => {
+          updates[el.dataset.key] = el.type === 'checkbox' ? el.checked
+            : el.type === 'number' ? Number(el.value)
+            : el.value;
+        });
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        try {
+          const res = await Auth.apiFetch(`/api/admin/settings/${group}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          });
+          if (!res.ok) throw new Error((await res.json()).detail || 'Save failed');
+          showToast('Settings saved');
+        } catch (err) {
+          alert('Error saving: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    });
+
+    // ---- Audit Log --------------------------------------------------------
+    async function loadAuditLog(page = 1) {
+      const tbody = document.getElementById('auditlog-body');
+      try {
+        const actionFilter = document.getElementById('audit-action-filter').value.trim();
+        const actorFilter = document.getElementById('audit-actor-filter').value.trim();
+        const params = new URLSearchParams({ page, per_page: 25 });
+        if (actionFilter) params.set('action_filter', actionFilter);
+        if (actorFilter) params.set('actor_filter', actorFilter);
+        const res = await Auth.apiFetch(`/api/admin/audit-log?${params}`);
+        const data = await res.json();
+        if (data.entries.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-muted">No admin actions match.</td></tr>`;
+        } else {
+          tbody.innerHTML = data.entries.map(e => {
+            const hasDiff = e.before_state || e.after_state;
+            const encodedBefore = encodeURIComponent(JSON.stringify(e.before_state ?? null));
+            const encodedAfter = encodeURIComponent(JSON.stringify(e.after_state ?? null));
+            return `
+            <tr>
+              <td class="text-muted" style="font-size:12px">${new Date(e.created_at).toLocaleString()}</td>
+              <td>${esc(e.actor_email)}</td>
+              <td><code style="font-size:12px">${esc(e.action)}</code></td>
+              <td class="text-muted" style="font-size:12px">${esc(e.target || '—')}</td>
+              <td class="text-muted" style="font-size:12px">${esc(e.ip_address || '—')}</td>
+              <td>${hasDiff
+                ? `<button class="btn btn-ghost btn-sm" onclick="showDiff('${encodedBefore}','${encodedAfter}','${esc(e.action)}','${esc(e.created_at)}')">View</button>`
+                : '<span class="text-muted" style="font-size:12px">—</span>'}</td>
+              <td class="text-muted" style="font-size:12px">${esc(e.details || '')}</td>
+            </tr>`;
+          }).join('');
+        }
+        renderPagination('auditlog-pagination', data.total, data.page, data.per_page, (p) => loadAuditLog(p));
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Error loading audit log.</td></tr>`;
+      }
+    }
+
+    // Filter inputs with debounce
+    let auditFilterTimeout;
+    ['audit-action-filter', 'audit-actor-filter'].forEach(id => {
+      document.getElementById(id).addEventListener('input', (e) => {
+        clearTimeout(auditFilterTimeout);
+        auditFilterTimeout = setTimeout(() => loadAuditLog(1), 300);
+      });
+    });
+
+    window.showDiff = function(encodedBefore, encodedAfter, action, createdAt) {
+      const beforeObj = JSON.parse(decodeURIComponent(encodedBefore));
+      const afterObj  = JSON.parse(decodeURIComponent(encodedAfter));
+      const before = beforeObj != null ? JSON.stringify(beforeObj, null, 2) : '— (none)';
+      const after  = afterObj  != null ? JSON.stringify(afterObj,  null,  2) : '— (none)';
+      const grid = document.getElementById('audit-diff-grid');
+      document.getElementById('audit-diff-meta').textContent =
+        `${action} · ${new Date(createdAt).toLocaleString()}`;
+      grid.innerHTML = `
+        <div class="diff-pane">
+          <h4>Before</h4>
+          <pre>${esc(before)}</pre>
+        </div>
+        <div class="diff-pane">
+          <h4>After</h4>
+          <pre>${esc(after)}</pre>
+        </div>`;
+      document.getElementById('audit-diff-modal').classList.remove('d-none');
+    };
+
+    window.closeDiffModal = function() {
+      document.getElementById('audit-diff-modal').classList.add('d-none');
+    };
+
+    // ---- Config version history -------------------------------------------
+    let historyGroup = null;
+
+    document.querySelectorAll('[data-history-group]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        historyGroup = btn.dataset.historyGroup;
+        document.getElementById('config-history-title').textContent =
+          `Configuration History — ${historyGroup}`;
+        document.getElementById('config-history-modal').classList.remove('d-none');
+        loadHistory(historyGroup, 1);
+      });
+    });
+
+    async function loadHistory(group, page = 1) {
+      const listEl = document.getElementById('config-history-list');
+      const canRevert = AdminState.has('config_history.revert');
+      try {
+        const res = await Auth.apiFetch(`/api/admin/settings/${group}/history?page=${page}&per_page=10`);
+        if (!res.ok) {
+          listEl.innerHTML = `<p class="text-muted text-sm">${esc((await res.json()).detail || 'Could not load history')}</p>`;
+          return;
+        }
+        const data = await res.json();
+        if (data.versions.length === 0) {
+          listEl.innerHTML = '<p class="text-muted text-sm">No saved versions yet — every save is snapshotted here.</p>';
+          document.getElementById('config-history-pagination').innerHTML = '';
+          return;
+        }
+        listEl.innerHTML = data.versions.map(v => `
+          <div class="version-item">
+            <div>
+              <div class="row gap-2 align-center">
+                <strong>${formatDateTime(v.created_at)}</strong>
+                ${esc(v.changed_by || '')}
+              </div>
+              <pre style="margin:var(--space-2) 0 0;font-size:var(--text-xs);white-space:pre-wrap;word-break:break-word">${esc(JSON.stringify(v.value, null, 2))}</pre>
+            </div>
+            ${canRevert ? `<button class="btn btn-ghost btn-sm" style="margin-left:var(--space-3);flex-shrink:0" onclick="revertConfig('${group}','${v.id}')">Revert</button>` : ''}
+          </div>`).join('');
+        renderPagination('config-history-pagination', data.total, data.page, data.per_page, (p) => loadHistory(group, p));
+      } catch (err) {
+        listEl.innerHTML = `<p class="text-muted text-sm">Error loading history.</p>`;
+      }
+    }
+
+    window.revertConfig = async function(group, versionId) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Revert configuration',
+        message: `Revert "${group}" to this saved version? The current state will be saved as a new version and logged in the audit trail.`,
+        confirmText: 'Yes, Revert',
+        cancelText: 'Cancel',
+        danger: false
+      }) : Promise.resolve(confirm(`Revert "${group}" to this version?`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/settings/${group}/revert/${versionId}`, { method: 'POST' });
+        if (!res.ok) throw new Error((await res.json()).detail || 'Revert failed');
+        document.getElementById('config-history-modal').classList.add('d-none');
+        loadSettings();
+        showToast('Configuration reverted');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    window.closeHistoryModal = function() {
+      document.getElementById('config-history-modal').classList.add('d-none');
+    };
+
+    // ---- IP Allowlist ------------------------------------------------------
+    async function loadIpAllowlist() {
+      const canWrite = AdminState.has('ip_allowlist.write');
+      const addPanel = document.getElementById('ip-allowlist-add-panel');
+      addPanel.style.display = canWrite ? '' : 'none';
+      try {
+        const res = await Auth.apiFetch('/api/admin/ip-allowlist');
+        if (!res.ok) throw new Error('Failed to load allowlist');
+        const data = await res.json();
+
+        const banner = document.getElementById('allowlist-status');
+        const statusText = document.getElementById('allowlist-status-text');
+        const enabled = data.entries.length > 0;
+        banner.className = `allowlist-status-banner ${enabled ? 'is-active' : 'is-inactive'}`;
+        statusText.innerHTML = enabled
+          ? `Allowlist <strong>Active</strong>: admin access is restricted to the ${data.entries.length} IP address(es) below.`
+          : `Allowlist <strong>Inactive</strong>: no restrictions in effect — any admin can sign in from any IP.`;
+
+        const tbody = document.getElementById('ip-allowlist-body');
+        if (data.entries.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-muted">No IP addresses in the allowlist yet.</td></tr>';
+        } else {
+          tbody.innerHTML = data.entries.map(e => `
+            <tr>
+              <td><code>${esc(e.ip_address)}</code></td>
+              <td>${esc(e.label || '—')}</td>
+              <td>${esc(e.added_by)}</td>
+              <td class="text-muted" style="font-size:12px">${formatDateTime(e.created_at)}</td>
+              <td class="admin-actions">
+                ${canWrite ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeIp('${e.id}','${esc(e.ip_address)}')">Remove</button>` : '—'}
+              </td>
+            </tr>`).join('');
+        }
+      } catch (err) {
+        document.getElementById('ip-allowlist-body').innerHTML =
+          `<tr><td colspan="5" class="text-muted">Error loading allowlist.</td></tr>`;
+      }
+    }
+
+    document.getElementById('ip-add-btn').addEventListener('click', async () => {
+      const ip = document.getElementById('ip-address-input').value.trim();
+      const label = document.getElementById('ip-label-input').value.trim();
+      const errorEl = document.getElementById('ip-add-error');
+      errorEl.textContent = '';
+      if (!ip) { errorEl.textContent = 'IP address is required.'; return; }
+      try {
+        const res = await Auth.apiFetch('/api/admin/ip-allowlist', {
+          method: 'POST',
+          body: { ip_address: ip, label },
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || 'Add failed');
+        document.getElementById('ip-address-input').value = '';
+        document.getElementById('ip-label-input').value = '';
+        loadIpAllowlist();
+        showToast('IP added to allowlist');
+      } catch (err) {
+        errorEl.textContent = err.message;
+      }
+    });
+
+    window.removeIp = async function(entryId, ip) {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Remove IP',
+        message: `Remove ${ip} from the allowlist? If this is your current IP you will be locked out of the admin portal immediately.`,
+        confirmText: 'Yes, Remove',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Remove ${ip} from the allowlist?`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/admin/ip-allowlist/${entryId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Remove failed');
+        loadIpAllowlist();
+        showToast('IP removed from allowlist');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    // Close config history modal on overlay click
+    document.getElementById('config-history-modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeHistoryModal();
+    });
+    document.getElementById('audit-diff-modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeDiffModal();
+    });
+
+    // ---- Pagination --------------------------------------------------------
+    function renderPagination(containerId, total, page, perPage, callback) {
+      const container = document.getElementById(containerId);
+      const totalPages = Math.ceil(total / perPage);
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '';
+      if (page > 1) html += `<button class="btn btn-ghost btn-sm" data-page="${page-1}">← Prev</button>`;
+      html += `<span class="text-muted" style="font-size:var(--text-sm);padding:0 var(--space-3)">Page ${page} of ${totalPages}</span>`;
+      if (page < totalPages) html += `<button class="btn btn-ghost btn-sm" data-page="${page+1}">Next →</button>`;
+
+      container.innerHTML = html;
+      container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => callback(parseInt(btn.dataset.page)));
+      });
+    }
+
+    // ---- Helpers -----------------------------------------------------------
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    // ---- Reusable confirm dialog --------------------------------------------
+    // Returns a Promise that resolves to true/false. All the delete/revert/purge
+    // flows call `window.showConfirmModal(...)` if present and otherwise fall
+    // back to the native `confirm()` — keeping every destructive action gated.
+    window._confirmResolve = null;
+
+    window.showConfirmModal = function(opts) {
+      const title = opts.title || 'Are you sure?';
+      const message = opts.message || '';
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      const okBtn = document.getElementById('confirm-ok');
+      okBtn.textContent = opts.confirmText || 'Confirm';
+      okBtn.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+      document.getElementById('confirm-cancel').textContent = opts.cancelText || 'Cancel';
+      modal.classList.remove('d-none');
+      return new Promise((resolve) => {
+        window._confirmResolve = resolve;
+        okBtn.onclick = () => { window._confirmResolve(true); closeConfirmModal(); };
+        document.getElementById('confirm-cancel').onclick = () => { window._confirmResolve(false); closeConfirmModal(); };
+      });
+    };
+
+    window.closeConfirmModal = function() {
+      document.getElementById('confirm-modal').classList.add('d-none');
+      if (window._confirmResolve) window._confirmResolve(false);
+      window._confirmResolve = null;
+    };
+
+    function showToast(msg) {
+      let toast = document.querySelector('.toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('is-visible');
+      setTimeout(() => toast.classList.remove('is-visible'), 3000);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('edit-user-modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeModal();
+    });
+
+    // ---- Plan expiry sweep ---------------------------------------------------
+    // Wires up the previously-orphaned POST /api/admin/check-expiring-plans —
+    // the endpoint existed with no way to trigger it from the UI. Sends
+    // "expiring soon" emails for Pro/Teams plans within 3 days of
+    // plan_expires_at, and auto-downgrades + emails anyone already past it.
+    document.getElementById('check-expiring-plans-btn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const resultEl = document.getElementById('check-expiring-plans-result');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      try {
+        const res = await Auth.apiFetch('/api/admin/check-expiring-plans', { method: 'POST' });
+        if (!res.ok) throw new Error('Check failed');
+        const data = await res.json();
+        resultEl.textContent = `Notified ${data.notified_expiring_soon} expiring-soon user(s), downgraded ${data.downgraded_expired} expired user(s).`;
+        showToast('Plan expiry check complete');
+        loadStats();
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+
+    // ---- Init --------------------------------------------------------------
+    loadStats();
+    loadPermissions();
+  })();
+  </script>
+</body>
+</html>

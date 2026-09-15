@@ -1,0 +1,14 @@
+{
+  "id": "cl-executive",
+  "name": "Executive Classic",
+  "tags": ["cover_letter", "executive", "leadership", "refined"],
+  "desc": "Prestigious double-rule header with refined typography for managers and executives.",
+  "category": "Cover Letter",
+  "doc_type": "cover_letter",
+  "is_featured": true,
+  "style": {
+    "font_family": "Fraunces, Georgia, serif",
+    "primary_color": "#1a365d",
+    "layout": "cl-executive"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "bold",
+  "name": "Bold",
+  "tags": ["bold", "creative"],
+  "desc": "Eye-catching amber accent headers and a strong left border — ideal for creative fields.",
+  "category": "Creative",
+  "is_featured": true,
+  "style": {
+    "font_family": "'Fraunces', Georgia, serif",
+    "primary_color": "#d98f34",
+    "layout": "single_column"
+  }
+}

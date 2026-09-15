@@ -1,0 +1,32 @@
+{
+  "id": "zen",
+  "name": "Zen Minimal",
+  "description": "A calming, fully self-contained two-column layout with an embedded stylesheet.",
+  "category": "Minimal",
+  "tags": [
+    "minimal",
+    "zen",
+    "two-column",
+    "clean",
+    "green"
+  ],
+  "is_featured": false,
+  "enabled": true,
+  "hasPhoto": false,
+  "layout": "two_column",
+  "isAts": true,
+  "style": {
+    "font_family": "Inter, sans-serif",
+    "primary_color": "#2f6f4f",
+    "layout": "two_column"
+  },
+  "sections": [
+    "summary",
+    "experience",
+    "skills",
+    "education",
+    "projects",
+    "certifications",
+    "languages"
+  ]
+}

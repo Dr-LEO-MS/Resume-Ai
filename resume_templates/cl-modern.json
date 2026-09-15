@@ -1,0 +1,14 @@
+{
+  "id": "cl-modern",
+  "name": "Modern Minimal",
+  "tags": ["cover_letter", "modern", "minimal", "clean"],
+  "desc": "Contemporary cover letter layout with crisp sans-serif typography and header accent bar.",
+  "category": "Cover Letter",
+  "doc_type": "cover_letter",
+  "is_featured": true,
+  "style": {
+    "font_family": "Inter, sans-serif",
+    "primary_color": "#2563eb",
+    "layout": "cl-modern"
+  }
+}

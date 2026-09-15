@@ -1,0 +1,14 @@
+{
+  "id": "cl-creative",
+  "name": "Creative Professional",
+  "tags": ["cover_letter", "creative", "bold", "modern"],
+  "desc": "Eye-catching accent banner and modern visual structure for creative and tech professionals.",
+  "category": "Cover Letter",
+  "doc_type": "cover_letter",
+  "is_featured": true,
+  "style": {
+    "font_family": "Inter, sans-serif",
+    "primary_color": "#d98f34",
+    "layout": "cl-creative"
+  }
+}

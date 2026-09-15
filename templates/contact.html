@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <main id="main" class="container section">
+    <span class="eyebrow">Contact</span>
+    <h1 class="h2" style="margin-top:var(--space-3)">Questions, feedback, partnerships</h1>
+
+    <div class="contact-layout">
+      <form id="contact-form" novalidate>
+        <div class="field"><label for="c-name">Name</label><input id="c-name" name="name" required></div>
+        <div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" required></div>
+        <div class="field"><label for="c-message">Message</label><textarea id="c-message" name="message" required></textarea></div>
+        <button class="btn btn-primary" type="submit">Send message</button>
+        <p class="field-hint" id="contact-status" role="status" style="margin-top:var(--space-3)"></p>
+      </form>
+
+      <div>
+        <div class="contact-info-item">
+          <div class="feature-icon">✉</div>
+          <div><h4>Email</h4><p class="text-muted" style="font-size:var(--text-sm)"><a href="mailto:{{ site.site.contact_email if site else 'hello@resumeai.example' }}" title="Send an email to {{ site.site.contact_email if site else 'hello@resumeai.example' }}">{{ site.site.contact_email if site else 'hello@resumeai.example' }}</a></p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="feature-icon">💬</div>
+          <div><h4>Support</h4><p class="text-muted" style="font-size:var(--text-sm)">Live chat, weekdays 9am–6pm</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="feature-icon">🤝</div>
+          <div><h4>Partnerships</h4><p class="text-muted" style="font-size:var(--text-sm)">Career centers & bootcamps welcome</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include "_footer.html" %}
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('contact-status');
+      status.textContent = 'Sending…';
+      const body = Object.fromEntries(new FormData(e.target));
+      try {
+        const res = await fetch('/api/contact', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        status.textContent = res.ok ? 'Thanks — we\'ll reply within a day.' : 'Something went wrong. Try again.';
+      } catch (err) {
+        status.textContent = 'Something went wrong. Try again.';
+      }
+    });
+  </script>
+</body>
+</html>

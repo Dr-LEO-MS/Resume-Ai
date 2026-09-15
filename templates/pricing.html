@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <main id="main" class="container section">
+    <span class="eyebrow">Pricing</span>
+    <h1 class="h2" style="margin-top:var(--space-3)">Start free. Upgrade when you're job-hunting hard.</h1>
+    <p class="lede">No subscription traps — pause anytime, your resumes stay yours.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Free</h3>
+        <p class="text-muted" style="font-size:var(--text-sm)">Everything to build one great resume.</p>
+        <div class="price-amount">{{ site.pricing.free_price if site else '$0' }}</div>
+        <ul class="price-features">
+          <li>✓ 1 saved resume</li>
+          <li>✓ All 8 templates</li>
+          <li>✓ 3 AI reviews / month</li>
+          <li>✓ PDF export (watermark-free)</li>
+        </ul>
+        <a href="/builder" class="btn btn-ghost btn-block">Start free</a>
+      </div>
+
+      <div class="price-card is-featured">
+        <span class="price-badge">Most popular</span>
+        <h3>Pro</h3>
+        <p class="text-muted" style="font-size:var(--text-sm)">For an active job search.</p>
+        <div class="price-amount">{{ site.pricing.pro_price if site else '$12' }}<span>{{ site.pricing.pro_period if site else '/month' }}</span></div>
+        <ul class="price-features">
+          <li>✓ Unlimited saved resumes</li>
+          <li>✓ Unlimited AI review & enhance</li>
+          <li>✓ Tailored keyword match per job post</li>
+          <li>✓ PDF + Word export</li>
+          <li>✓ Shareable link with view tracking</li>
+        </ul>
+        <a href="/builder" class="btn btn-accent btn-block">Start Pro trial</a>
+      </div>
+
+      <div class="price-card">
+        <h3>Teams</h3>
+        <p class="text-muted" style="font-size:var(--text-sm)">For career centers & coaches.</p>
+        <div class="price-amount">{{ site.pricing.teams_price if site else 'Custom' }}</div>
+        <ul class="price-features">
+          <li>✓ Everything in Pro</li>
+          <li>✓ Seats for multiple advisors</li>
+          <li>✓ Shared template library</li>
+          <li>✓ Usage analytics</li>
+        </ul>
+        <a href="/contact" class="btn btn-ghost btn-block">Talk to us</a>
+      </div>
+    </div>
+  </main>
+
+  {% include "_footer.html" %}
+</body>
+</html>

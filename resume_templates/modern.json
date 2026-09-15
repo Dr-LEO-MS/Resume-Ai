@@ -1,0 +1,13 @@
+{
+  "id": "modern",
+  "name": "Modern",
+  "tags": ["modern", "bold"],
+  "desc": "Clean contemporary layout with accent section labels and crisp typography.",
+  "category": "Modern",
+  "is_featured": true,
+  "style": {
+    "font_family": "Inter, sans-serif",
+    "primary_color": "#2563eb",
+    "layout": "modern"
+  }
+}

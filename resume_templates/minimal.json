@@ -1,0 +1,13 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "tags": ["minimal", "clean"],
+  "desc": "Clean, whitespace-forward layout with no decorative rules — lets the content speak.",
+  "category": "Minimal",
+  "is_featured": false,
+  "style": {
+    "font_family": "Inter, sans-serif",
+    "primary_color": "#333333",
+    "layout": "single_column"
+  }
+}

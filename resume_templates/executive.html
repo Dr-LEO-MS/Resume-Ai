@@ -1,0 +1,159 @@
+<!-- @template: {"id": "executive", "name": "Executive Leadership", "category": "Executive", "desc": "Refined executive resume format highlighting leadership impact, milestones, and credentials.", "tags": ["executive", "leadership", "management", "formal"]} -->
+<article class="resume-sheet theme-executive" role="document" aria-label="Resume of {{personal.fullName}}">
+  <header class="resume-header" role="banner">
+    <div class="header-main">
+      {{#if personal.photo}}
+      <img src="{{personal.photo}}" alt="Profile photo of {{personal.fullName}}" class="header-photo" />
+      {{/if}}
+      <div class="header-identity">
+        <h1 class="candidate-name">{{personal.fullName}}</h1>
+        <p class="candidate-title">{{personal.title}}</p>
+      </div>
+    </div>
+    <ul class="contact-list" role="list" aria-label="Contact Information">
+      {{#if personal.email}}
+      <li class="contact-item"><a href="mailto:{{personal.email}}" title="Send an email to {{personal.email}}" aria-label="Email {{personal.email}}">{{personal.email}}</a></li>
+      {{/if}}
+      {{#if personal.phone}}
+      <li class="contact-item"><a href="tel:{{phone personal.phone}}" title="Call {{personal.phone}}" aria-label="Call {{personal.phone}}">{{personal.phone}}</a></li>
+      {{/if}}
+      {{#if personal.location}}
+      <li class="contact-item"><span>{{personal.location}}</span></li>
+      {{/if}}
+      {{#if personal.linkedin}}
+      <li class="contact-item"><a href="{{url personal.linkedin}}" target="_blank" rel="noopener noreferrer" title="View LinkedIn profile" aria-label="View LinkedIn profile">{{handle personal.linkedin}}</a></li>
+      {{/if}}
+      {{#if personal.github}}
+      <li class="contact-item"><a href="{{url personal.github}}" target="_blank" rel="noopener noreferrer" title="View GitHub profile" aria-label="View GitHub profile">{{handle personal.github}}</a></li>
+      {{/if}}
+      {{#if personal.website}}
+      <li class="contact-item"><a href="{{url personal.website}}" target="_blank" rel="noopener noreferrer" title="Visit portfolio website" aria-label="Visit portfolio website">{{handle personal.website}}</a></li>
+      {{/if}}
+    </ul>
+  </header>
+
+  <main class="resume-body" role="main">
+    {{#if summary}}
+    <section class="resume-section section-summary" aria-labelledby="sec-summary-title">
+      <h2 id="sec-summary-title" class="section-title">Executive Profile</h2>
+      <div class="section-content text-block">
+        <p>{{summary}}</p>
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if experience}}
+    <section class="resume-section section-experience" aria-labelledby="sec-exp-title">
+      <h2 id="sec-exp-title" class="section-title">Leadership & Career History</h2>
+      <div class="section-content">
+        {{#each experience}}
+        <div class="timeline-item" role="article">
+          <div class="item-header">
+            <h3 class="item-role">{{role}}{{#if company}} — <span class="item-company">{{company}}</span>{{/if}}</h3>
+            <span class="item-dates">{{start}}{{#if end}} – {{end}}{{/if}}</span>
+          </div>
+          {{#if location}}<div class="item-location">{{location}}</div>{{/if}}
+          {{#if bullets}}
+          <ul class="bullet-list" role="list">
+            {{#each bullets}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if education}}
+    <section class="resume-section section-education" aria-labelledby="sec-edu-title">
+      <h2 id="sec-edu-title" class="section-title">Education & Credentials</h2>
+      <div class="section-content">
+        {{#each education}}
+        <div class="timeline-item" role="article">
+          <div class="item-header">
+            <h3 class="item-role">{{degree}}{{#if field}}, {{field}}{{/if}}</h3>
+            <span class="item-dates">{{start}}{{#if end}} – {{end}}{{/if}}</span>
+          </div>
+          <div class="item-school">{{school}}{{#if gpa}} · GPA {{gpa}}{{/if}}</div>
+          {{#if honors}}<div class="item-extra"><strong>Honors:</strong> {{honors}}</div>{{/if}}
+          {{#if coursework}}<div class="item-extra"><strong>Coursework:</strong> {{coursework}}</div>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if skills}}
+    <section class="resume-section section-skills" aria-labelledby="sec-skills-title">
+      <h2 id="sec-skills-title" class="section-title">Strategic Core Competencies</h2>
+      <div class="section-content skills-grid">
+        {{#if skills.technical}}
+        <div class="skill-group">
+          <strong class="skill-category-label">Domain Knowledge</strong>
+          <div class="pills-wrapper">
+            {{#each skills.technical}}<span class="skill-pill">{{this}}</span>{{/each}}
+          </div>
+        </div>
+        {{/if}}
+        {{#if skills.tools}}
+        <div class="skill-group">
+          <strong class="skill-category-label">Tools & Platforms</strong>
+          <div class="pills-wrapper">
+            {{#each skills.tools}}<span class="skill-pill">{{this}}</span>{{/each}}
+          </div>
+        </div>
+        {{/if}}
+        {{#if skills.soft}}
+        <div class="skill-group">
+          <strong class="skill-category-label">Leadership & Governance</strong>
+          <div class="pills-wrapper">
+            {{#each skills.soft}}<span class="skill-pill">{{this}}</span>{{/each}}
+          </div>
+        </div>
+        {{/if}}
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if projects}}
+    <section class="resume-section section-projects" aria-labelledby="sec-proj-title">
+      <h2 id="sec-proj-title" class="section-title">Key Initiatives & Programs</h2>
+      <div class="section-content">
+        {{#each projects}}
+        <div class="project-item">
+          <div class="item-header">
+            <h3 class="item-role">{{#if link}}<a href="{{url link}}" target="_blank" rel="noopener noreferrer" class="project-title-link" title="View project: {{name}}" aria-label="View project {{name}}">{{/if}}{{name}}{{#if link}}</a>{{/if}}{{#if role}} <span class="project-role">({{role}})</span>{{/if}}</h3>
+            {{#if link}}<a href="{{url link}}" target="_blank" rel="noopener noreferrer" class="project-link" title="Open project: {{name}}" aria-label="Open project: {{name}}">View Details ↗</a>{{/if}}
+          </div>
+          {{#if description}}<p class="item-description">{{description}}</p>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if certifications}}
+    <section class="resume-section section-certifications" aria-labelledby="sec-cert-title">
+      <h2 id="sec-cert-title" class="section-title">Board & Professional Certifications</h2>
+      <div class="section-content">
+        <ul class="bullet-list" role="list">
+          {{#each certifications}}
+          <li><strong>{{name}}</strong>{{#if issuer}} — {{issuer}}{{/if}}{{#if date}} ({{date}}){{/if}}</li>
+          {{/each}}
+        </ul>
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if languages}}
+    <section class="resume-section section-languages" aria-labelledby="sec-lang-title">
+      <h2 id="sec-lang-title" class="section-title">Languages</h2>
+      <div class="pills-wrapper">
+        {{#each languages}}<span class="skill-pill">{{name}}{{#if level}} · {{level}}{{/if}}</span>{{/each}}
+      </div>
+    </section>
+    {{/if}}
+  </main>
+</article>

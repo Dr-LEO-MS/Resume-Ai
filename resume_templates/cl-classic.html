@@ -1,0 +1,32 @@
+<!-- @template: {"id": "cl-classic", "name": "Traditional Formal", "category": "Cover Letter", "desc": "Timeless formal serif letterhead layout suitable for corporate, law, and academic roles.", "tags": ["cover_letter", "classic", "formal"]} -->
+<div class="resume-doc theme-cl-classic cl-preview-document">
+  <div class="doc-main-wrapper">
+    <div class="cl-doc-header">
+      <h1 class="cl-doc-name">{{personal.fullName}}</h1>
+      {{#if personal.title}}<div class="cl-doc-title">{{personal.title}}</div>{{/if}}
+      <div class="cl-doc-contact-bar">
+        {{#if personal.email}}<a href="mailto:{{personal.email}}">{{personal.email}}</a>{{/if}}
+        {{#if personal.phone}}<a href="tel:{{personal.phone}}">{{personal.phone}}</a>{{/if}}
+        {{#if personal.location}}<span>{{personal.location}}</span>{{/if}}
+        {{#if personal.linkedin}}<a href="{{url personal.linkedin}}" target="_blank">{{handle personal.linkedin}}</a>{{/if}}
+        {{#if personal.website}}<a href="{{url personal.website}}" target="_blank">{{handle personal.website}}</a>{{/if}}
+      </div>
+    </div>
+    <div class="cl-doc-recipient-box">
+      <div class="cl-doc-date">{{coverLetter.date}}</div>
+      <div class="cl-doc-recipient">
+        {{#if coverLetter.hiringManager}}<strong>{{coverLetter.hiringManager}}</strong>{{/if}}
+        {{#if coverLetter.companyName}}<div>{{coverLetter.companyName}}</div>{{/if}}
+        {{#if coverLetter.companyAddress}}<div>{{coverLetter.companyAddress}}</div>{{/if}}
+      </div>
+    </div>
+    <div class="cl-doc-salutation">{{coverLetter.salutation}}</div>
+    <div class="cl-doc-body">
+      {{{coverLetter.body}}}
+    </div>
+    <div class="cl-doc-signoff">
+      <div>{{coverLetter.signOff}}</div>
+      <div class="cl-doc-signature-name">{{coverLetter.signature}}</div>
+    </div>
+  </div>
+</div>

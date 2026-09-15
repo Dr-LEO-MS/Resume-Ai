@@ -1,0 +1,131 @@
+<!-- @template: {"id": "zen", "name": "Zen Minimal", "category": "Minimal", "desc": "A calming, fully self-contained two-column layout with an embedded stylesheet.", "tags": ["minimal", "zen", "two-column", "clean"], "is_featured": false, "style": {"font_family": "Inter, sans-serif", "primary_color": "#2f6f4f", "layout": "two_column"}} -->
+<!--
+  ZEN — a fully self-contained modular resume "disk".
+
+  Everything this template needs (structure + styling) lives in THIS file.
+  It carries no dependency on the site's global stylesheet: the embedded
+  <style> block uses a unique `zn-` class prefix so it can never collide with
+  or borrow from any other template. The website acts purely as the "player":
+  it reads this file and injects the resume data into the {{placeholders}}.
+
+  Standardized data contract (the same object every template receives):
+    personal { fullName, title, email, phone, location, linkedin, github, website, photo }
+    summary  (string)
+    experience[]  { role, company, location, start, end, current, bullets[] }
+    education[]   { school, degree, field, start, end, gpa, honors, coursework }
+    skills    { technical[], tools[], soft[] }
+    projects[]    { name, description, link, role }
+    certifications[] { name, issuer, date }
+    languages[]    { name, level }
+-->
+<article class="zn-sheet" role="document" aria-label="Resume of {{personal.fullName}}">
+  <style>
+    .zn-sheet { box-sizing: border-box; font-family: "Inter", system-ui, sans-serif; color: #24321f; background: #fff; }
+    .zn-wrap { display: grid; grid-template-columns: minmax(150px, 32%) 1fr; gap: 20px; }
+    .zn-side { background: #eef3ec; padding: 22px 18px 22px 22px; align-self: start; }
+    .zn-main { padding: 0 6px 22px 8px; }
+    .zn-name { font-size: 24px; font-weight: 700; letter-spacing: .5px; color: #1c2b1a; margin: 0; }
+    .zn-title { font-size: 12px; font-weight: 600; color: #2f6f4f; margin: 2px 0 10px; }
+    .zn-rule { border: 0; border-top: 2px solid #2f6f4f; margin: 8px 0; }
+    .zn-side h2, .zn-main h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #2f6f4f; margin: 14px 0 6px; }
+    .zn-contact { font-size: 10.5px; color: #24321f; }
+    .zn-contact a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .zn-contact a:hover, .zn-contact a:focus-visible { color: #2f6f4f; text-decoration-thickness: 2px; opacity: .9; }
+    .zn-contact a:active { color: #1c2b1a; }
+    .zn-contact a:visited { color: inherit; opacity: .85; }
+    .zn-skill { display: inline-block; font-size: 9.5px; background: #dde7da; border-radius: 999px; padding: 2px 8px; margin: 1px; color: #22351f; }
+    .zn-cat { display: block; font-size: 9.5px; font-weight: 600; color: #55705a; margin-bottom: 3px; }
+    .zn-lang { font-size: 10px; margin-bottom: 4px; }
+    .zn-entry { margin: 0 0 9px; }
+    .zn-entry-head { font-size: 11.5px; font-weight: 600; color: #1c2b1a; }
+    .zn-entry-sub { font-size: 10px; color: #3d4a3b; }
+    .zn-dates { font-size: 9.5px; color: #6a7a6a; font-style: italic; }
+    .zn-bullets { margin: 3px 0 4px; padding-left: 14px; }
+    .zn-bullets li { font-size: 10px; color: #33413a; }
+    .zn-summary { font-size: 10.5px; line-height: 1.5; color: #33413a; }
+    .zn-link { font-size: 9.5px; color: #2f6f4f; }
+    .zn-project-link { font-weight: 600; color: #2f6f4f; }
+    .zn-project-link:hover, .zn-project-link:focus-visible { text-decoration-thickness: 2px; opacity: .9; }
+    .zn-project-link:active { color: #1c2b1a; }
+    .zn-project-link:visited { opacity: .85; }
+  </style>
+
+  <div class="zn-wrap">
+    <aside class="zn-side" aria-label="Sidebar">
+      {{#if personal.photo}}<img src="{{personal.photo}}" alt="Profile photo of {{personal.fullName}}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;display:block;margin:0 0 10px;" />{{/if}}
+      <h1 class="zn-name">{{personal.fullName}}</h1>
+      <p class="zn-title">{{personal.title}}</p>
+      <hr class="zn-rule" />
+      <div class="zn-contact">
+        {{#if personal.email}}<div><a href="mailto:{{personal.email}}" title="Send an email to {{personal.email}}" aria-label="Email {{personal.email}}">{{personal.email}}</a></div>{{/if}}
+        {{#if personal.phone}}<div><a href="tel:{{phone personal.phone}}" title="Call {{personal.phone}}" aria-label="Call {{personal.phone}}">{{personal.phone}}</a></div>{{/if}}
+        {{#if personal.location}}<div>{{personal.location}}</div>{{/if}}
+        {{#if personal.linkedin}}<div><a href="{{url personal.linkedin}}" target="_blank" rel="noopener noreferrer" title="View LinkedIn profile" aria-label="View LinkedIn profile">{{handle personal.linkedin}}</a></div>{{/if}}
+        {{#if personal.github}}<div><a href="{{url personal.github}}" target="_blank" rel="noopener noreferrer" title="View GitHub profile" aria-label="View GitHub profile">{{handle personal.github}}</a></div>{{/if}}
+        {{#if personal.website}}<div><a href="{{url personal.website}}" target="_blank" rel="noopener noreferrer" title="Visit portfolio website" aria-label="Visit portfolio website">{{handle personal.website}}</a></div>{{/if}}
+      </div>
+
+      {{#if skills.technical}}
+      <h2>Skills</h2>
+      {{#if skills.technical}}<span class="zn-cat">Technical</span><div>{{#each skills.technical}}<span class="zn-skill">{{this}}</span>{{/each}}</div>{{/if}}
+      {{#if skills.tools}}<span class="zn-cat">Tools</span><div>{{#each skills.tools}}<span class="zn-skill">{{this}}</span>{{/each}}</div>{{/if}}
+      {{#if skills.soft}}<span class="zn-cat">Soft Skills</span><div>{{#each skills.soft}}<span class="zn-skill">{{this}}</span>{{/each}}</div>{{/if}}
+      {{/if}}
+
+      {{#if languages}}
+      <h2>Languages</h2>
+      {{#each languages}}<div class="zn-lang">{{name}}{{#if level}} · {{level}}{{/if}}</div>{{/each}}
+      {{/if}}
+    </aside>
+<main class="zn-main" role="main">
+      {{#if summary}}
+      <h2>Profile</h2>
+      <p class="zn-summary">{{summary}}</p>
+      {{/if}}
+
+      {{#if experience}}
+      <h2>Experience</h2>
+      {{#each experience}}
+      <div class="zn-entry">
+        <div class="zn-entry-head">{{role}}{{#if company}} — {{company}}{{/if}}</div>
+        <div class="zn-dates">{{start}}{{#if end}} – {{end}}{{/if}}{{#if current}} – Present{{/if}}</div>
+        {{#if location}}<div class="zn-entry-sub">{{location}}</div>{{/if}}
+        {{#if bullets}}
+        <ul class="zn-bullets">{{#each bullets}}<li>{{this}}</li>{{/each}}</ul>
+        {{/if}}
+      </div>
+      {{/each}}
+      {{/if}}
+
+      {{#if education}}
+      <h2>Education</h2>
+      {{#each education}}
+      <div class="zn-entry">
+        <div class="zn-entry-head">{{degree}}{{#if field}}, {{field}}{{/if}}</div>
+        <div class="zn-dates">{{start}}{{#if end}} – {{end}}{{/if}}</div>
+        <div class="zn-entry-sub">{{school}}{{#if gpa}} · GPA {{gpa}}{{/if}}</div>
+        {{#if honors}}<div class="zn-entry-sub">Honors: {{honors}}</div>{{/if}}
+      </div>
+      {{/each}}
+      {{/if}}
+
+      {{#if projects}}
+      <h2>Projects</h2>
+      {{#each projects}}
+      <div class="zn-entry">
+        <div class="zn-entry-head">{{#if link}}<a href="{{url link}}" target="_blank" rel="noopener noreferrer" title="View project: {{name}}" aria-label="View project {{name}}" class="zn-project-link">{{/if}}{{name}}{{#if link}}</a>{{/if}}{{#if role}} ({{role}}){{/if}}</div>
+        {{#if description}}<div class="zn-entry-sub">{{description}}</div>{{/if}}
+        {{#if link}}<div class="zn-link"><a href="{{url link}}" target="_blank" rel="noopener noreferrer" title="Open project: {{name}}" aria-label="Open project: {{name}}">View project ↗</a></div>{{/if}}
+      </div>
+      {{/each}}
+      {{/if}}
+
+      {{#if certifications}}
+      <h2>Certifications</h2>
+      {{#each certifications}}
+      <div class="zn-entry-sub">{{name}}{{#if issuer}} — {{issuer}}{{/if}}{{#if date}} ({{date}}){{/if}}</div>
+      {{/each}}
+      {{/if}}
+    </main>
+  </div>
+</article>

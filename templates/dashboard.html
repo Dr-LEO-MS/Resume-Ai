@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css?v=20260913-1">
+  <style>
+    .thumb-preview-live { aspect-ratio: 210 / 297; background: #ffffff; overflow: hidden; position: relative; cursor: zoom-in; border-radius: var(--radius-sm); }
+    .thumb-preview-live .resume-pages-container,
+    .thumb-preview-live .resume-doc,
+    .thumb-preview-live .resume-page {
+      transform-origin: top left;
+      width: 794px !important;
+      min-width: 794px !important;
+      max-width: 794px !important;
+      pointer-events: none;
+      box-shadow: none !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0 !important;
+    }
+    .thumb-preview-live .zoom-hint {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0); opacity: 0; transition: opacity 150ms, background 150ms;
+      color: #fff; font-size: 12px; font-weight: 600; pointer-events: none; z-index: 10;
+    }
+    .thumb-preview-live:hover .zoom-hint { opacity: 1; background: rgba(0,0,0,0.3); }
+    .limit-banner { border: 1px solid var(--border); background: var(--bg-recessed); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); margin-top: var(--space-4); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
+    /* Click-to-zoom lightbox for thumbnails — see openThumbnailZoom() below */
+    .thumb-zoom-overlay {
+      position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4);
+    }
+    .thumb-zoom-overlay .resume-pages-container,
+    .thumb-zoom-overlay .resume-page,
+    .thumb-zoom-overlay .resume-doc { max-width: 100%; }
+    .thumb-zoom-close { position: absolute; top: var(--space-5); right: var(--space-5); background: #fff; border-radius: 50%; width: 40px; height: 40px; border: none; font-size: 18px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-side">
+      <a href="#resumes" class="dashboard-nav-link is-active" data-tab="resumes">My resumes</a>
+      <a href="#account" class="dashboard-nav-link" data-tab="account">Account</a>
+      <a href="/pricing">Billing</a>
+    </aside>
+    <main class="dashboard-main" id="main">
+      <!-- Section: Resumes -->
+      <section id="section-resumes">
+        <div class="row justify-between">
+          <h1 class="h2">My resumes</h1>
+          <a href="/builder" class="btn btn-primary btn-sm" id="new-resume-btn">+ New resume</a>
+        </div>
+        <div id="resume-limit-banner" class="limit-banner d-none">
+          <span class="text-muted" style="font-size:var(--text-sm)" id="resume-limit-text"></span>
+          <a href="/pricing" class="btn btn-primary btn-sm">Upgrade to Pro</a>
+        </div>
+        <div class="resume-card-grid" id="resume-grid"></div>
+        <div id="empty-state" class="d-none mt-4">
+          <p class="text-muted">No saved resumes yet — create one to see it here.</p>
+        </div>
+
+        <div class="row justify-between mt-6">
+          <h2 class="h3">My cover letters</h2>
+          <a href="/builder?doc_type=cover_letter" class="btn btn-ghost btn-sm" id="new-cover-letter-btn">+ New cover letter</a>
+        </div>
+        <div id="cover-letter-limit-banner" class="limit-banner d-none">
+          <span class="text-muted" style="font-size:var(--text-sm)" id="cover-letter-limit-text"></span>
+          <a href="/pricing" class="btn btn-primary btn-sm">Upgrade to Pro</a>
+        </div>
+        <div class="resume-card-grid" id="cover-letter-grid"></div>
+        <div id="cover-letter-empty-state" class="d-none mt-2">
+          <p class="text-muted">No cover letters yet.</p>
+        </div>
+      </section>
+
+      <!-- Section: Account Management -->
+      <section id="section-account" class="d-none">
+        <div class="row justify-between mb-6">
+          <div>
+            <h1 class="h2">Account Settings</h1>
+            <p class="text-muted" style="font-size:var(--text-sm);margin-top:var(--space-1)">Manage your profile, security credentials, and preferences.</p>
+          </div>
+        </div>
+
+        <!-- Card 1: Profile -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <div>
+              <h2 class="account-card-title">Profile Information</h2>
+              <p class="account-card-desc">Your public name, biography, and personalized profile picture.</p>
+            </div>
+          </div>
+
+          <form id="form-profile" onsubmit="handleProfileUpdate(event)">
+            <div class="account-avatar-wrap">
+              <div id="avatar-preview-container">
+                <div id="avatar-fallback" class="account-avatar-fallback">U</div>
+                <img id="avatar-img" class="account-avatar-img d-none" alt="Profile avatar">
+              </div>
+              <div>
+                <div class="row gap-2 mb-1">
+                  <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleAvatarUpload(event)">
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('avatar-file-input').click()">Upload new photo</button>
+                  <button type="button" id="btn-remove-avatar" class="btn btn-ghost btn-sm d-none" style="color:var(--danger)" onclick="handleAvatarRemove()">Remove</button>
+                </div>
+                <span class="account-hint">JPG, PNG, or WebP up to 8MB. Recommended square 400x400.</span>
+              </div>
+            </div>
+
+            <div class="account-grid-2">
+              <div class="account-field">
+                <label class="account-label" for="acct-full-name">Full name / Display name</label>
+                <input type="text" id="acct-full-name" class="form-input" placeholder="e.g. Jane Doe">
+              </div>
+
+              <div class="account-field">
+                <label class="account-label" for="acct-profile-slug">Custom profile URL</label>
+                <div class="input-prefix-group">
+                  <span class="prefix">resumeai.com/u/</span>
+                  <input type="text" id="acct-profile-slug" placeholder="your-name" maxlength="30">
+                </div>
+                <span class="account-hint">3-30 letters, numbers, or hyphens.</span>
+              </div>
+            </div>
+
+            <div class="account-field">
+              <div class="row justify-between">
+                <label class="account-label" for="acct-bio">Bio</label>
+                <span class="account-hint" id="bio-char-count">0/200</span>
+              </div>
+              <textarea id="acct-bio" class="form-input" rows="3" maxlength="200" placeholder="Brief summary of your background and expertise..." oninput="updateBioCounter()"></textarea>
+            </div>
+
+            <div class="account-field">
+              <label class="row gap-3 align-center" style="cursor:pointer">
+                <input type="checkbox" id="acct-is-public" style="width:16px;height:16px;accent-color:var(--signal)">
+                <div>
+                  <div class="account-label" style="font-size:var(--text-sm)">Make profile publicly visible</div>
+                  <div class="account-hint">Allow visitors to view your public profile at your custom URL.</div>
+                </div>
+              </label>
+            </div>
+
+            <div class="row justify-end align-center mt-4">
+              <button type="submit" id="btn-save-profile" class="btn btn-primary btn-sm">Save profile</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Card 2: Security -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <div>
+              <h2 class="account-card-title">Security & Credentials</h2>
+              <p class="account-card-desc">Update your password, manage sessions, and secure your account.</p>
+            </div>
+          </div>
+
+          <form id="form-password" onsubmit="handlePasswordUpdate(event)">
+            <div id="current-pw-field" class="account-field">
+              <label class="account-label" for="acct-current-password">Current password</label>
+              <input type="password" id="acct-current-password" class="form-input" placeholder="Enter your current password" autocomplete="current-password">
+            </div>
+
+            <div class="account-grid-2">
+              <div class="account-field">
+                <label class="account-label" for="acct-new-password">New password</label>
+                <input type="password" id="acct-new-password" class="form-input" placeholder="Enter at least 14 characters" oninput="checkPasswordStrength(this.value)" autocomplete="new-password">
+
+                <div class="pw-strength-container">
+                  <div class="pw-strength-track">
+                    <div id="pw-strength-bar" class="pw-strength-bar"></div>
+                  </div>
+                  <span id="pw-strength-label" class="account-hint" style="font-weight:600">Password strength</span>
+                </div>
+              </div>
+
+              <div class="account-field">
+                <label class="account-label" for="acct-confirm-password">Confirm new password</label>
+                <input type="password" id="acct-confirm-password" class="form-input" placeholder="Re-type new password" autocomplete="new-password">
+              </div>
+            </div>
+
+            <ul class="pw-req-list mb-4">
+              <li class="pw-req-item" id="req-len">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                14+ characters
+              </li>
+              <li class="pw-req-item" id="req-upper">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Uppercase letter
+              </li>
+              <li class="pw-req-item" id="req-lower">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Lowercase letter
+              </li>
+              <li class="pw-req-item" id="req-digit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Number (0-9)
+              </li>
+              <li class="pw-req-item" id="req-special">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Special character (!@#$%^&*)
+              </li>
+            </ul>
+
+            <div class="row justify-end align-center mt-4">
+              <button type="submit" id="btn-save-pw" class="btn btn-primary btn-sm">Update password</button>
+            </div>
+          </form>
+
+          <hr class="my-6" style="border:none;border-top:1px solid var(--border)">
+
+          <!-- 2FA & Session Section -->
+          <div class="account-field mb-5">
+            <div class="row justify-between align-center">
+              <div>
+                <div class="account-label">Two-Factor Authentication (2FA)</div>
+                <div class="account-hint">Add an extra layer of security using an authenticator app.</div>
+              </div>
+              <span class="user-plan-badge" style="background:var(--bg-recessed);color:var(--text-muted)">Coming soon</span>
+            </div>
+          </div>
+
+          <div class="account-field">
+            <div class="row justify-between align-center">
+              <div>
+                <div class="account-label">Active Sessions</div>
+                <div class="account-hint" id="acct-last-login-info">Last signed in: —</div>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="handleSignOutAll()">Sign out of all sessions</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Preferences -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <div>
+              <h2 class="account-card-title">Preferences & Notifications</h2>
+              <p class="account-card-desc">Manage regional settings, email preferences, and appearance.</p>
+            </div>
+          </div>
+
+          <!-- Email management -->
+          <div class="account-field mb-5">
+            <label class="account-label">Email address</label>
+            <div class="row justify-between align-center gap-3">
+              <input type="text" id="acct-current-email" class="form-input" readonly style="background:var(--bg-recessed)">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-email-change" onclick="toggleEmailChangeForm()">Change email</button>
+            </div>
+
+            <!-- Collapsible email change form -->
+            <div id="email-change-form" class="d-none mt-4 p-4" style="background:var(--bg-recessed);border-radius:var(--radius-sm);border:1px solid var(--border)">
+              <div class="account-grid-2">
+                <div class="account-field">
+                  <label class="account-label" for="acct-new-email">New email address</label>
+                  <input type="email" id="acct-new-email" class="form-input" placeholder="name@example.com">
+                </div>
+                <div id="email-pw-field" class="account-field">
+                  <label class="account-label" for="acct-email-password">Current password</label>
+                  <input type="password" id="acct-email-password" class="form-input" placeholder="Confirm your password">
+                </div>
+              </div>
+              <div class="row gap-2 mt-3">
+                <button type="button" class="btn btn-primary btn-sm" onclick="handleEmailUpdate()">Confirm email change</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEmailChangeForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <form id="form-preferences" onsubmit="handlePreferencesUpdate(event)">
+            <div class="account-grid-2">
+              <div class="account-field">
+                <label class="account-label" for="acct-timezone">Timezone</label>
+                <select id="acct-timezone" class="form-input">
+                  <option value="UTC">UTC (Coordinated Universal Time)</option>
+                  <option value="America/New_York">Eastern Time (US & Canada)</option>
+                  <option value="America/Chicago">Central Time (US & Canada)</option>
+                  <option value="America/Denver">Mountain Time (US & Canada)</option>
+                  <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                  <option value="America/Anchorage">Alaska</option>
+                  <option value="Pacific/Honolulu">Hawaii</option>
+                  <option value="America/Sao_Paulo">Brasilia (Sao Paulo)</option>
+                  <option value="Europe/London">London / Greenwich</option>
+                  <option value="Europe/Paris">Paris / Berlin / Rome / Madrid</option>
+                  <option value="Europe/Athens">Athens / Cairo / Helsinki</option>
+                  <option value="Europe/Moscow">Moscow / St. Petersburg</option>
+                  <option value="Asia/Dubai">Dubai / Abu Dhabi</option>
+                  <option value="Asia/Kolkata">India Standard Time (IST)</option>
+                  <option value="Asia/Bangkok">Bangkok / Hanoi / Jakarta</option>
+                  <option value="Asia/Singapore">Singapore / Hong Kong / Beijing</option>
+                  <option value="Asia/Tokyo">Tokyo / Seoul</option>
+                  <option value="Australia/Sydney">Sydney / Melbourne</option>
+                  <option value="Pacific/Auckland">Auckland / Wellington</option>
+                </select>
+              </div>
+
+              <div class="account-field">
+                <label class="account-label" for="acct-date-format">Date format</label>
+                <select id="acct-date-format" class="form-input">
+                  <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 12/31/2026)</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY (e.g. 31/12/2026)</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-12-31)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="account-grid-2">
+              <div class="account-field">
+                <label class="account-label" for="acct-locale">Language</label>
+                <select id="acct-locale" class="form-input">
+                  <option value="en">English (US)</option>
+                  <option value="es">Español (Spanish)</option>
+                  <option value="fr">Français (French)</option>
+                  <option value="de">Deutsch (German)</option>
+                </select>
+              </div>
+
+              <div class="account-field">
+                <label class="account-label">Interface theme</label>
+                <div class="row gap-2 mt-1 wrap">
+                  <button type="button" class="btn btn-ghost btn-sm theme-choice-btn" data-theme-val="light" onclick="setAppTheme('light')">☀️ Light</button>
+                  <button type="button" class="btn btn-ghost btn-sm theme-choice-btn" data-theme-val="dark" onclick="setAppTheme('dark')">🌙 Dark</button>
+                  <button type="button" class="btn btn-ghost btn-sm theme-choice-btn" data-theme-val="system" onclick="setAppTheme('system')">💻 System default</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="account-field mt-4">
+              <div class="account-label mb-2">Email notifications</div>
+              <div class="row flex-column gap-3">
+                <label class="row gap-3 align-center" style="cursor:pointer">
+                  <input type="checkbox" id="acct-notify-email" style="width:16px;height:16px;accent-color:var(--signal)">
+                  <div>
+                    <div style="font-size:var(--text-sm);font-weight:500">Product updates & newsletters</div>
+                    <div class="account-hint">Receive helpful tips, resume writing advice, and platform updates.</div>
+                  </div>
+                </label>
+                <label class="row gap-3 align-center" style="cursor:pointer">
+                  <input type="checkbox" id="acct-notify-product" style="width:16px;height:16px;accent-color:var(--signal)">
+                  <div>
+                    <div style="font-size:var(--text-sm);font-weight:500">Account & security alerts</div>
+                    <div class="account-hint">Important notifications regarding your plan, subscription, or account security.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="row justify-end align-center mt-6">
+              <button type="submit" id="btn-save-preferences" class="btn btn-primary btn-sm">Save preferences</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Card 4: Support & Details -->
+        <div class="account-card">
+          <div class="account-card-header">
+            <div>
+              <h2 class="account-card-title">Account Details & Support</h2>
+              <p class="account-card-desc">Information about your subscription and direct links to help resources.</p>
+            </div>
+          </div>
+
+          <div class="account-info-list mb-6">
+            <div class="account-info-row">
+              <span class="label">Current plan</span>
+              <div class="val">
+                <span id="acct-plan-badge" class="user-plan-badge">free</span>
+                <a href="/pricing" class="btn btn-ghost btn-sm ml-2">Upgrade / Manage</a>
+              </div>
+            </div>
+            <div class="account-info-row">
+              <span class="label">Member since</span>
+              <span class="val" id="acct-created-date">—</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label">Account ID</span>
+              <div class="val">
+                <span id="acct-user-id" style="font-family:var(--font-mono);font-size:var(--text-xs)">—</span>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="copyAccountId()">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row gap-3 wrap">
+            <a href="/contact" class="btn btn-ghost btn-sm">💬 Contact Support</a>
+            <a href="/pricing" class="btn btn-ghost btn-sm">💳 Billing & Plans</a>
+          </div>
+        </div>
+
+        <!-- Card 5: Danger Zone -->
+        <div class="account-card danger-zone">
+          <div class="account-card-header">
+            <div>
+              <h2 class="account-card-title" style="color:var(--danger,#eb4d3d)">Danger Zone</h2>
+              <p class="account-card-desc">Irreversible account actions and permanent deletion.</p>
+            </div>
+          </div>
+
+          <div class="row justify-between align-center wrap gap-4">
+            <div>
+              <div class="account-label" style="font-weight:600">Delete Account</div>
+              <div class="account-hint">Permanently delete your account, saved resumes, and all associated data.</div>
+            </div>
+            <button type="button" class="btn btn-sm" style="background:var(--danger,#eb4d3d);color:#fff;border:none" onclick="openDeleteAccountModal()">Delete account</button>
+          </div>
+
+          <!-- Collapsible Delete Confirmation Box -->
+          <div id="delete-account-box" class="d-none mt-5 p-4" style="border-radius:var(--radius-sm);border:1px solid rgba(235,77,61,0.4);background:rgba(235,77,61,0.04)">
+            <h4 style="margin:0 0 var(--space-2);color:var(--danger,#eb4d3d);font-size:var(--text-base)">Confirm Account Deletion</h4>
+            <p class="account-hint mb-4" style="color:var(--text)">This action is permanent and cannot be undone. To proceed, please confirm below:</p>
+
+            <div class="account-field">
+              <label class="account-label" for="del-confirm-text">Type <strong style="color:var(--danger,#eb4d3d)">DELETE</strong> to confirm:</label>
+              <input type="text" id="del-confirm-text" class="form-input" placeholder="DELETE" autocomplete="off">
+            </div>
+
+            <div id="del-pw-field" class="account-field">
+              <label class="account-label" for="del-password">Enter your current password:</label>
+              <input type="password" id="del-password" class="form-input" placeholder="Password">
+            </div>
+
+            <div class="row gap-2 mt-4">
+              <button type="button" id="btn-confirm-delete" class="btn btn-sm" style="background:var(--danger,#eb4d3d);color:#fff;border:none" onclick="submitDeleteAccount()">Permanently delete account</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="closeDeleteAccountModal()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  {% include "_footer.html" %}
+  <script src="/static/js/template-engine.js?v=2.1"></script>
+  <script>
+  (function() {
+    if (!Auth.requireAuth()) return;
+
+    const navLinks = document.querySelectorAll('.dashboard-nav-link');
+    const sectionResumes = document.getElementById('section-resumes');
+    const sectionAccount = document.getElementById('section-account');
+    const resumeGrid = document.getElementById('resume-grid');
+    const resumeEmpty = document.getElementById('empty-state');
+    const clGrid = document.getElementById('cover-letter-grid');
+    const clEmpty = document.getElementById('cover-letter-empty-state');
+
+    let currentAccountUser = null;
+
+    function populateFromLocalUser() {
+      const u = Auth.getUser();
+      if (!u) return;
+      const nameInput = document.getElementById('acct-full-name');
+      if (nameInput && !nameInput.value) nameInput.value = u.full_name || '';
+      const emailInput = document.getElementById('acct-current-email');
+      if (emailInput && !emailInput.value) emailInput.value = u.email || '';
+      const planBadge = document.getElementById('acct-plan-badge');
+      if (planBadge && (!planBadge.textContent || planBadge.textContent === 'free')) planBadge.textContent = u.plan || 'free';
+      const userId = document.getElementById('acct-user-id');
+      if (userId && (!userId.textContent || userId.textContent === '—')) userId.textContent = u.id || '—';
+      updateAvatarDisplay(u);
+    }
+
+    // ---- Hash routing --------------------------------------------------------
+    function route() {
+      const hash = window.location.hash || '#resumes';
+      const isAccount = hash === '#account';
+
+      navLinks.forEach(link => {
+        const target = link.getAttribute('data-tab');
+        if ((isAccount && target === 'account') || (!isAccount && target === 'resumes')) {
+          link.classList.add('is-active');
+        } else {
+          link.classList.remove('is-active');
+        }
+      });
+
+      if (isAccount) {
+        sectionResumes.classList.add('d-none');
+        sectionAccount.classList.remove('d-none');
+        populateFromLocalUser();
+        loadAccountData();
+      } else {
+        sectionAccount.classList.add('d-none');
+        sectionResumes.classList.remove('d-none');
+      }
+    }
+
+    window.addEventListener('hashchange', route);
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const tab = link.getAttribute('data-tab');
+        if (tab) {
+          if (window.location.hash === '#' + tab) {
+            route();
+          } else {
+            window.location.hash = '#' + tab;
+          }
+        }
+      });
+    });
+
+    function escapeHTML(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    function buildCard(r, docType) {
+      const card = document.createElement('div');
+      card.className = 'resume-card';
+      const mountId = 'thumb-' + r.id;
+      card.innerHTML = `
+        <div class="thumb-preview-live" id="${mountId}" data-resume-id="${r.id}">
+          <div class="zoom-hint">🔍 Click to preview</div>
+        </div>
+        <div class="resume-card-body">
+          <div>
+            <div style="font-weight:600;font-size:var(--text-sm)">${escapeHTML(r.name)}</div>
+            <div class="meta">Edited ${new Date(r.updated_at).toLocaleDateString()}</div>
+          </div>
+          <div class="row gap-2">
+            <a href="/builder?id=${r.id}&panel=design" class="btn btn-ghost btn-sm" title="Open design & photo customization">Customize</a>
+            <a href="/builder?id=${r.id}" class="btn btn-ghost btn-sm">Edit</a>
+            <button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="deleteResume('${r.id}',this.closest('.resume-card'), '${docType}')">✕</button>
+          </div>
+        </div>`;
+      // Render an actual live preview (not a generic placeholder) using the
+      // same rendering code the builder and PDF export use, then scale it to
+      // FILL the thumbnail box proportionally.
+      requestAnimationFrame(() => {
+        const mount = document.getElementById(mountId);
+        if (!mount) return;
+        const zoomHint = mount.querySelector('.zoom-hint');
+        TemplateEngine.mount(r.content, mount);
+        if (zoomHint) mount.appendChild(zoomHint);
+
+        const container = mount.querySelector('.resume-pages-container') || mount.querySelector('.resume-page') || mount.querySelector('.resume-doc');
+        if (container) {
+          const mountWidth = mount.clientWidth || 320;
+          const scale = mountWidth / 794;
+          container.style.transformOrigin = 'top left';
+          container.style.transform = `scale(${scale})`;
+          container.style.width = '794px';
+          container.style.position = 'absolute';
+          container.style.top = '0';
+          container.style.left = '0';
+        }
+        mount.addEventListener('click', () => openThumbnailZoom(r));
+      });
+      return card;
+    }
+
+    // ---- Click-to-zoom lightbox
+    function openThumbnailZoom(r) {
+      const overlay = document.createElement('div');
+      overlay.className = 'thumb-zoom-overlay';
+      overlay.innerHTML = `<button class="thumb-zoom-close" aria-label="Close">✕</button>`;
+      const mount = document.createElement('div');
+      mount.style.cssText = 'max-width:840px;width:100%;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:20px;';
+      overlay.appendChild(mount);
+      document.body.appendChild(overlay);
+      TemplateEngine.mount(r.content, mount);
+      const close = () => overlay.remove();
+      overlay.querySelector('.thumb-zoom-close').addEventListener('click', close);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    }
+
+    async function loadSection(docType, grid, emptyEl) {
+      try {
+        const res = await Auth.apiFetch(`/api/resumes?doc_type=${docType}`);
+        if (!res.ok) throw new Error('Failed to load');
+        const items = await res.json();
+        grid.innerHTML = '';
+        if (items.length === 0) {
+          emptyEl.classList.remove('d-none');
+        } else {
+          emptyEl.classList.add('d-none');
+          items.forEach(r => grid.appendChild(buildCard(r, docType)));
+        }
+      } catch (err) {
+        console.error(`Error loading ${docType}s:`, err);
+        emptyEl.classList.remove('d-none');
+        emptyEl.querySelector('p').textContent = 'Error loading — please try again.';
+      }
+    }
+
+    async function loadLimits() {
+      try {
+        const res = await Auth.apiFetch('/api/resumes/limits');
+        if (!res.ok) return;
+        const limits = await res.json();
+        applyLimit('resume', limits.resume, document.getElementById('new-resume-btn'),
+          document.getElementById('resume-limit-banner'), document.getElementById('resume-limit-text'), limits.unlimited);
+        applyLimit('cover letter', limits.cover_letter, document.getElementById('new-cover-letter-btn'),
+          document.getElementById('cover-letter-limit-banner'), document.getElementById('cover-letter-limit-text'), limits.unlimited);
+      } catch (err) {
+        console.error('Could not load plan limits:', err);
+      }
+    }
+
+    function applyLimit(label, info, createBtn, banner, textEl, unlimited) {
+      if (unlimited || !info || info.can_create) {
+        createBtn.classList.remove('d-none');
+        banner.classList.add('d-none');
+        return;
+      }
+      createBtn.classList.add('d-none');
+      banner.classList.remove('d-none');
+      textEl.textContent = `You've used ${info.used} of ${info.limit} free ${label}${info.limit === 1 ? '' : 's'}. Upgrade to Pro for unlimited.`;
+    }
+
+    window.deleteResume = async function(id, cardEl, docType) {
+      const docLabel = docType === 'cover_letter' ? 'Cover Letter' : 'Resume';
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Confirm',
+        message: `Are you sure want to permanently delete this ${docLabel}?`,
+        confirmText: 'Yes, Delete!',
+        cancelText: 'Cancel',
+        danger: true
+      }) : Promise.resolve(confirm(`Are you sure want to permanently delete this ${docLabel}?`)));
+      if (!confirmed) return;
+      try {
+        const res = await Auth.apiFetch(`/api/resumes/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        cardEl.remove();
+        loadLimits();
+        const grid = docType === 'cover_letter' ? clGrid : resumeGrid;
+        const emptyEl = docType === 'cover_letter' ? clEmpty : resumeEmpty;
+        if (!grid.querySelector('.resume-card')) emptyEl.classList.remove('d-none');
+      } catch (err) {
+        window.showToast('Error deleting: ' + err.message, 'error');
+      }
+    };
+
+    // =========================================================================
+    // Account Management Logic
+    // =========================================================================
+
+    window.checkPasswordStrength = function(pwd) {
+      const reqLen = document.getElementById('req-len');
+      const reqUpper = document.getElementById('req-upper');
+      const reqLower = document.getElementById('req-lower');
+      const reqDigit = document.getElementById('req-digit');
+      const reqSpecial = document.getElementById('req-special');
+
+      const hasLen = pwd && pwd.length >= 14;
+      const hasUpper = /[A-Z]/.test(pwd || '');
+      const hasLower = /[a-z]/.test(pwd || '');
+      const hasDigit = /\d/.test(pwd || '');
+      const hasSpecial = /[^A-Za-z0-9]/.test(pwd || '');
+
+      toggleReq(reqLen, hasLen);
+      toggleReq(reqUpper, hasUpper);
+      toggleReq(reqLower, hasLower);
+      toggleReq(reqDigit, hasDigit);
+      toggleReq(reqSpecial, hasSpecial);
+
+      const metCount = [hasLen, hasUpper, hasLower, hasDigit, hasSpecial].filter(Boolean).length;
+      const bar = document.getElementById('pw-strength-bar');
+      const label = document.getElementById('pw-strength-label');
+      if (!bar || !label) return;
+
+      bar.className = 'pw-strength-bar';
+      if (!pwd) {
+        label.textContent = 'Password strength';
+        label.style.color = 'var(--text-muted)';
+      } else if (metCount <= 2) {
+        bar.classList.add('weak');
+        label.textContent = 'Weak';
+        label.style.color = 'var(--danger, #eb4d3d)';
+      } else if (metCount === 3) {
+        bar.classList.add('fair');
+        label.textContent = 'Fair';
+        label.style.color = 'var(--warn, #f59e0b)';
+      } else if (metCount === 4) {
+        bar.classList.add('good');
+        label.textContent = 'Good';
+        label.style.color = '#3b82f6';
+      } else {
+        bar.classList.add('strong');
+        label.textContent = 'Strong (All requirements met)';
+        label.style.color = 'var(--signal, #10b981)';
+      }
+    };
+
+    function toggleReq(el, met) {
+      if (!el) return;
+      const svg = el.querySelector('svg');
+      if (met) {
+        el.classList.add('met');
+        if (svg) svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+      } else {
+        el.classList.remove('met');
+        if (svg) svg.innerHTML = '<circle cx="12" cy="12" r="10"/>';
+      }
+    }
+
+    async function loadAccountData() {
+      try {
+        let u = null;
+        try {
+          const res = await Auth.apiFetch('/api/auth/me/extended');
+          if (res.ok) u = await res.json();
+        } catch (e) {
+          console.warn('Could not fetch extended profile', e);
+        }
+
+        if (!u) {
+          try {
+            const resMe = await Auth.apiFetch('/api/auth/me');
+            if (resMe.ok) u = await resMe.json();
+          } catch (e) {
+            console.warn('Could not fetch me profile', e);
+          }
+        }
+
+        if (!u) {
+          u = Auth.getUser();
+        }
+
+        if (!u) throw new Error('Failed to load profile');
+        currentAccountUser = u;
+
+        // Security card
+        const currPwField = document.getElementById('current-pw-field');
+        const btnSavePw = document.getElementById('btn-save-pw');
+        if (u.has_google && !u.has_set_password) {
+          if (currPwField) currPwField.classList.add('d-none');
+          if (btnSavePw) btnSavePw.textContent = 'Set password';
+        } else {
+          if (currPwField) currPwField.classList.remove('d-none');
+          if (btnSavePw) btnSavePw.textContent = 'Update password';
+        }
+
+        // Login info
+        const lastLoginEl = document.getElementById('acct-last-login-info');
+        if (lastLoginEl) {
+          const lastTime = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : 'Just now';
+          const lastIp = u.last_login_ip || 'Local';
+          lastLoginEl.textContent = `Last signed in: ${lastTime} (${lastIp})`;
+        }
+
+        // Profile card
+        const nameInput = document.getElementById('acct-full-name');
+        if (nameInput) nameInput.value = u.full_name || '';
+        const slugInput = document.getElementById('acct-profile-slug');
+        if (slugInput) slugInput.value = u.profile_slug || '';
+        const bioInput = document.getElementById('acct-bio');
+        if (bioInput) bioInput.value = u.bio || '';
+        const publicCheckbox = document.getElementById('acct-is-public');
+        if (publicCheckbox) publicCheckbox.checked = !!u.is_profile_public;
+        updateBioCounter();
+
+        // Avatar
+        updateAvatarDisplay(u);
+
+        // Email & Preferences
+        const emailInput = document.getElementById('acct-current-email');
+        if (emailInput) emailInput.value = u.email || '';
+        const tzSelect = document.getElementById('acct-timezone');
+        if (tzSelect) tzSelect.value = u.timezone || 'UTC';
+        const dfSelect = document.getElementById('acct-date-format');
+        if (dfSelect) dfSelect.value = u.date_format || 'MM/DD/YYYY';
+        const locSelect = document.getElementById('acct-locale');
+        if (locSelect) locSelect.value = u.locale || 'en';
+        const notEmail = document.getElementById('acct-notify-email');
+        if (notEmail) notEmail.checked = u.notifications_email !== false;
+        const notProd = document.getElementById('acct-notify-product');
+        if (notProd) notProd.checked = u.notifications_product !== false;
+
+        // Details
+        const planBadge = document.getElementById('acct-plan-badge');
+        if (planBadge) planBadge.textContent = u.plan || 'free';
+        const createdDate = document.getElementById('acct-created-date');
+        if (createdDate) createdDate.textContent = u.created_at ? new Date(u.created_at).toLocaleDateString() : '—';
+        const userId = document.getElementById('acct-user-id');
+        if (userId) userId.textContent = u.id || '—';
+
+        window.updateThemeButtons();
+      } catch (err) {
+        console.error('Account data error:', err);
+        window.showToast('Could not load account details', 'error');
+      }
+    }
+
+    function updateAvatarDisplay(user) {
+      const avatarImg = document.getElementById('avatar-img');
+      const avatarFallback = document.getElementById('avatar-fallback');
+      const btnRemove = document.getElementById('btn-remove-avatar');
+
+      if (user && user.profile_picture_url) {
+        if (avatarImg) {
+          avatarImg.src = user.profile_picture_url;
+          avatarImg.classList.remove('d-none');
+        }
+        if (avatarFallback) avatarFallback.classList.add('d-none');
+        if (btnRemove) btnRemove.classList.remove('d-none');
+      } else {
+        if (avatarImg) avatarImg.classList.add('d-none');
+        if (avatarFallback) {
+          avatarFallback.classList.remove('d-none');
+          const initial = ((user && user.full_name) || (user && user.email) || 'U').charAt(0).toUpperCase();
+          avatarFallback.textContent = initial;
+        }
+        if (btnRemove) btnRemove.classList.add('d-none');
+      }
+    }
+
+    window.updateBioCounter = function() {
+      const bio = document.getElementById('acct-bio');
+      const count = document.getElementById('bio-char-count');
+      if (bio && count) {
+        count.textContent = `${bio.value.length}/200`;
+      }
+    };
+
+    window.updateThemeButtons = function() {
+      const savedTheme = localStorage.getItem('resumeai:theme') || 'system';
+      document.querySelectorAll('.theme-choice-btn').forEach(btn => {
+        if (btn.dataset.themeVal === savedTheme) {
+          btn.style.background = 'var(--bg-recessed)';
+          btn.style.borderColor = 'var(--signal)';
+          btn.style.fontWeight = '600';
+        } else {
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.fontWeight = 'normal';
+        }
+      });
+    };
+
+    window.setAppTheme = function(theme) {
+      if (theme === 'system') {
+        localStorage.setItem('resumeai:theme', 'system');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('resumeai:theme', theme);
+      }
+      window.updateThemeButtons();
+      window.showToast(`Theme switched to ${theme === 'system' ? 'System default' : theme}`, 'success');
+    };
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        window.showToast('Account ID copied to clipboard', 'success');
+      } catch (e) {
+        window.showToast('Could not copy to clipboard', 'error');
+      }
+      ta.remove();
+    }
+
+    window.copyAccountId = function() {
+      const idEl = document.getElementById('acct-user-id');
+      const id = idEl ? idEl.textContent.trim() : '';
+      if (!id || id === '—') return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(id).then(() => {
+          window.showToast('Account ID copied to clipboard', 'success');
+        }).catch(() => {
+          fallbackCopy(id);
+        });
+      } else {
+        fallbackCopy(id);
+      }
+    };
+
+    window.handlePasswordUpdate = async function(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('acct-current-password')?.value;
+      const newPassword = document.getElementById('acct-new-password')?.value || '';
+      const confirmPassword = document.getElementById('acct-confirm-password')?.value || '';
+
+      if (!newPassword) {
+        window.showToast('Please enter a new password.', 'error');
+        return;
+      }
+      if (newPassword.length < 14) {
+        window.showToast('Password must be at least 14 characters long.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        window.showToast('New passwords do not match.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-pw');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+      }
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/change-password', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_password: currentPassword || null, new_password: newPassword }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to update password');
+        window.showToast(data.message || 'Password updated successfully!', 'success');
+        const pwForm = document.getElementById('form-password');
+        if (pwForm) pwForm.reset();
+        checkPasswordStrength('');
+        loadAccountData();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Update password';
+        }
+      }
+    };
+
+    window.handleProfileUpdate = async function(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('acct-full-name')?.value || '';
+      const profileSlug = document.getElementById('acct-profile-slug')?.value || '';
+      const bio = document.getElementById('acct-bio')?.value || '';
+      const isPublic = document.getElementById('acct-is-public')?.checked || false;
+
+      const btn = document.getElementById('btn-save-profile');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+      }
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/update-profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            full_name: fullName.trim(),
+            profile_slug: profileSlug.trim(),
+            bio: bio.trim(),
+            is_profile_public: isPublic,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to update profile');
+        Auth.updateUser(data);
+        window.showToast('Profile updated successfully!', 'success');
+        loadAccountData();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save profile';
+        }
+      }
+    };
+
+    window.handleAvatarUpload = async function(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        window.showToast('Uploading photo...', 'default');
+        const res = await Auth.apiFetch('/api/auth/upload-avatar', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to upload photo');
+        Auth.updateUser({ profile_picture_url: data.url });
+        window.showToast('Profile photo updated!', 'success');
+        loadAccountData();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      } finally {
+        e.target.value = '';
+      }
+    };
+
+    window.handleAvatarRemove = async function() {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Remove Photo',
+        message: 'Are you sure you want to remove your profile photo?',
+        confirmText: 'Remove Photo',
+        cancelText: 'Cancel',
+        danger: true,
+      }) : Promise.resolve(confirm('Are you sure you want to remove your profile photo?')));
+      if (!confirmed) return;
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/remove-avatar', { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to remove avatar');
+        Auth.updateUser({ profile_picture_url: null });
+        window.showToast('Profile photo removed', 'success');
+        loadAccountData();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    window.toggleEmailChangeForm = function() {
+      const form = document.getElementById('email-change-form');
+      if (!form) return;
+      const isHidden = form.classList.toggle('d-none');
+      if (!isHidden) {
+        const newEmailInput = document.getElementById('acct-new-email');
+        if (newEmailInput) newEmailInput.value = '';
+        const pwInput = document.getElementById('acct-email-password');
+        if (pwInput) pwInput.value = '';
+        const pwField = document.getElementById('email-pw-field');
+        if (pwField) {
+          if (currentAccountUser && currentAccountUser.has_google && !currentAccountUser.has_set_password) {
+            pwField.classList.add('d-none');
+          } else {
+            pwField.classList.remove('d-none');
+          }
+        }
+      }
+    };
+
+    window.handleEmailUpdate = async function() {
+      const newEmail = document.getElementById('acct-new-email')?.value?.trim();
+      const currentPassword = document.getElementById('acct-email-password')?.value;
+
+      if (!newEmail) {
+        window.showToast('Please enter a new email address', 'error');
+        return;
+      }
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/update-email', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_email: newEmail, current_password: currentPassword || null }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to update email');
+        Auth.setSession(data.access_token, data.user);
+        Auth.updateHeader();
+        window.showToast('Email updated successfully!', 'success');
+        toggleEmailChangeForm();
+        loadAccountData();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    window.handlePreferencesUpdate = async function(e) {
+      e.preventDefault();
+      const timezone = document.getElementById('acct-timezone')?.value;
+      const dateFormat = document.getElementById('acct-date-format')?.value;
+      const locale = document.getElementById('acct-locale')?.value;
+      const notifyEmail = document.getElementById('acct-notify-email')?.checked;
+      const notifyProduct = document.getElementById('acct-notify-product')?.checked;
+
+      const btn = document.getElementById('btn-save-preferences');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+      }
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/update-preferences', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            timezone,
+            date_format: dateFormat,
+            locale,
+            notifications_email: notifyEmail,
+            notifications_product: notifyProduct,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to save preferences');
+        window.showToast('Preferences saved successfully!', 'success');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save preferences';
+        }
+      }
+    };
+
+    window.handleSignOutAll = async function() {
+      const confirmed = await (window.showConfirmModal ? window.showConfirmModal({
+        title: 'Sign Out All Sessions',
+        message: 'This will invalidate all active sessions across other browsers and devices, keeping only this current session active.',
+        confirmText: 'Sign Out Sessions',
+        cancelText: 'Cancel',
+        danger: false,
+      }) : Promise.resolve(confirm('Sign out of all other sessions?')));
+      if (!confirmed) return;
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/sign-out-all', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to sign out sessions');
+        Auth.setSession(data.access_token, data.user);
+        window.showToast('Successfully signed out of all other sessions', 'success');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    };
+
+    window.openDeleteAccountModal = function() {
+      const box = document.getElementById('delete-account-box');
+      if (!box) return;
+      box.classList.remove('d-none');
+      const confirmInput = document.getElementById('del-confirm-text');
+      if (confirmInput) {
+        confirmInput.value = '';
+        confirmInput.focus();
+      }
+      const pwInput = document.getElementById('del-password');
+      if (pwInput) pwInput.value = '';
+      const pwField = document.getElementById('del-pw-field');
+      if (pwField) {
+        if (currentAccountUser && currentAccountUser.has_google && !currentAccountUser.has_set_password) {
+          pwField.classList.add('d-none');
+        } else {
+          pwField.classList.remove('d-none');
+        }
+      }
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    window.closeDeleteAccountModal = function() {
+      const box = document.getElementById('delete-account-box');
+      if (box) box.classList.add('d-none');
+    };
+
+    window.submitDeleteAccount = async function() {
+      const confirmText = document.getElementById('del-confirm-text')?.value?.trim();
+      if (confirmText !== 'DELETE') {
+        window.showToast('Please type DELETE in uppercase to confirm.', 'error');
+        return;
+      }
+
+      const pwInput = document.getElementById('del-password');
+      let password = pwInput ? pwInput.value : null;
+      if (currentAccountUser && (currentAccountUser.has_set_password || !currentAccountUser.has_google)) {
+        if (!password) {
+          window.showToast('Please enter your password to authorize deletion.', 'error');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btn-confirm-delete');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Deleting...';
+      }
+
+      try {
+        const res = await Auth.apiFetch('/api/auth/delete-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmation: 'DELETE', current_password: password || null }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to delete account');
+        alert('Your account has been deleted.');
+        Auth.logout();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Permanently delete account';
+        }
+      }
+    };
+
+    // Initial section loads & routing
+    loadSection('resume', resumeGrid, resumeEmpty);
+    loadSection('cover_letter', clGrid, clEmpty);
+    loadLimits();
+    route();
+  })();
+  </script>
+</body>
+</html>

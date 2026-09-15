@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Templates — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <main id="main" class="container section">
+    <span class="eyebrow">8 templates</span>
+    <h1 class="h2" style="margin-top:var(--space-3)">Every layout parses cleanly in an ATS</h1>
+    <p class="lede">No tables, no text boxes, no columns that confuse a parser. Pick a look, swap it anytime in the builder.</p>
+
+    <div class="template-filters" role="tablist" aria-label="Filter templates">
+      {% for f in ['All', 'Classic', 'Modern', 'Minimal', 'Bold', 'Executive', 'Creative'] %}
+      <button class="filter-chip {% if loop.first %}is-active{% endif %}" data-filter="{{ f|lower }}">{{ f }}</button>
+      {% endfor %}
+    </div>
+
+    <div class="template-gallery-grid" id="gallery-grid">
+      {% set templates = [
+        {'id':'classic','name':'Classic','tags':['classic','minimal'],'desc':'Timeless serif header, single column.'},
+        {'id':'modern','name':'Modern','tags':['modern','bold'],'desc':'Dark sidebar with accent section labels.'},
+        {'id':'minimal','name':'Minimal','tags':['minimal'],'desc':'No rules, generous whitespace, bold type.'},
+        {'id':'bold','name':'Bold','tags':['bold','creative'],'desc':'Amber section markers, left accent border.'},
+        {'id':'executive','name':'Executive','tags':['classic','executive'],'desc':'Formal structure for senior roles.'},
+        {'id':'compact','name':'Compact','tags':['minimal','classic'],'desc':'Fits more on one page, tight rhythm.'},
+        {'id':'creative','name':'Creative','tags':['creative','modern'],'desc':'For portfolio-led fields like design.'},
+        {'id':'technical','name':'Technical','tags':['modern','minimal'],'desc':'Skills-forward layout for engineers.'}
+      ] %}
+      {% for t in templates %}
+      <div class="gallery-card" data-tags="{{ t.tags|join(' ') }}">
+        <div class="thumb-preview">
+          <div class="doc-line w-90" style="height:12px;margin-bottom:10px"></div>
+          <div class="doc-line w-60"></div>
+          <div class="doc-line w-80" style="margin-top:16px"></div>
+          <div class="doc-line w-70"></div>
+          <div class="doc-line w-90"></div>
+          <div class="doc-line w-60"></div>
+        </div>
+        <div class="gallery-card-body">
+          <h3 class="h3" style="font-size:var(--text-base)">{{ t.name }}</h3>
+          <p class="text-muted" style="font-size:var(--text-sm);margin-top:4px">{{ t.desc }}</p>
+          <div class="tags">{% for tag in t.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div>
+          <a href="/builder?template={{ t.id }}" class="btn btn-primary btn-sm btn-block" style="margin-top:var(--space-4)">Use this template</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+
+  {% include "_footer.html" %}
+  <script>
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('is-active'));
+        chip.classList.add('is-active');
+        const filter = chip.dataset.filter;
+        document.querySelectorAll('#gallery-grid .gallery-card').forEach(card => {
+          const show = filter === 'all' || card.dataset.tags.includes(filter);
+          card.style.display = show ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "id": "obsidian",
+  "name": "Obsidian Dark",
+  "category": "Creative",
+  "tags": ["dark", "creative", "developer", "contrast"],
+  "desc": "High-contrast dark resume theme with striking blue divider rules and modern typography.",
+  "thumbnail": "",
+  "premium": false,
+  "style": {
+    "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+    "fontSize": "10pt",
+    "primaryColor": "#60a5fa",
+    "textColor": "#e2e8f0",
+    "lineHeight": "1.5",
+    "margins": "18mm"
+  },
+  "sections": ["summary", "experience", "skills", "education", "projects", "certifications", "languages"],
+  "defaultOrder": ["summary", "experience", "skills", "education", "projects", "certifications", "languages"]
+}

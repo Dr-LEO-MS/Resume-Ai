@@ -1,0 +1,34 @@
+<!-- @template: {"id": "cl-executive", "name": "Executive Classic", "category": "Cover Letter", "desc": "Prestigious double-rule header with refined typography for managers and executives.", "tags": ["cover_letter", "executive", "leadership"]} -->
+<div class="resume-doc theme-cl-executive cl-preview-document">
+  <div class="doc-main-wrapper">
+    <div class="cl-doc-header">
+      <div>
+        <h1 class="cl-doc-name">{{personal.fullName}}</h1>
+        {{#if personal.title}}<div class="cl-doc-title">{{personal.title}}</div>{{/if}}
+      </div>
+      <div class="cl-doc-contact-bar">
+        {{#if personal.email}}<div>{{personal.email}}</div>{{/if}}
+        {{#if personal.phone}}<div>{{personal.phone}}</div>{{/if}}
+        {{#if personal.location}}<div>{{personal.location}}</div>{{/if}}
+      </div>
+    </div>
+    <div class="cl-doc-recipient-box">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+        <div class="cl-doc-recipient">
+          {{#if coverLetter.hiringManager}}<strong>{{coverLetter.hiringManager}}</strong>{{/if}}
+          {{#if coverLetter.companyName}}<div>{{coverLetter.companyName}}</div>{{/if}}
+          {{#if coverLetter.companyAddress}}<div>{{coverLetter.companyAddress}}</div>{{/if}}
+        </div>
+        <div class="cl-doc-date">{{coverLetter.date}}</div>
+      </div>
+    </div>
+    <div class="cl-doc-salutation">{{coverLetter.salutation}}</div>
+    <div class="cl-doc-body">
+      {{{coverLetter.body}}}
+    </div>
+    <div class="cl-doc-signoff">
+      <div>{{coverLetter.signOff}}</div>
+      <div class="cl-doc-signature-name">{{coverLetter.signature}}</div>
+    </div>
+  </div>
+</div>

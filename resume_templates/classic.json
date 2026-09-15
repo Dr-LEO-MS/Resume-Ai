@@ -1,0 +1,16 @@
+{
+  "id": "classic",
+  "name": "Classic",
+  "tags": [
+    "classic",
+    "minimal"
+  ],
+  "desc": "Timeless serif header, single column layout perfect for traditional industries.",
+  "category": "Classic",
+  "is_featured": true,
+  "style": {
+    "font_family": "Georgia, serif",
+    "primary_color": "#1e293b",
+    "layout": "single_column"
+  }
+}

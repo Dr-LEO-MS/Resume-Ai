@@ -1,0 +1,14 @@
+{
+  "id": "cl-classic",
+  "name": "Traditional Formal",
+  "tags": ["cover_letter", "classic", "formal", "serif"],
+  "desc": "Timeless formal serif letterhead layout suitable for corporate, law, and academic roles.",
+  "category": "Cover Letter",
+  "doc_type": "cover_letter",
+  "is_featured": true,
+  "style": {
+    "font_family": "Fraunces, Georgia, serif",
+    "primary_color": "#1e293b",
+    "layout": "cl-classic"
+  }
+}

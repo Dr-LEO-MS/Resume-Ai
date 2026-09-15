@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css?v=20260913-1">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <header class="site-header">
+    <div class="container builder-header-container">
+      <div class="nav-left row align-center gap-3">
+        <a href="/" class="logo"><span class="logo-mark" aria-hidden="true"></span></a>
+        <input type="text" id="doc-title-input" class="doc-title" value="My Resume" aria-label="Resume Title">
+        <select class="lang-dropdown" id="lang-select-dropdown" title="Select Language">
+          <option value="en" selected>🇺🇸 English</option>
+          <option value="es">🇪🇸 Spanish</option>
+          <option value="fr">🇫🇷 French</option>
+          <option value="de">🇩🇪 German</option>
+          <option value="it">🇮🇹 Italian</option>
+          <option value="pt">🇵🇹 Portuguese</option>
+          <option value="nl">🇳🇱 Dutch</option>
+          <option value="hi">🇮🇳 Hindi</option>
+          <option value="zh">🇨🇳 Chinese</option>
+          <option value="ja">🇯🇵 Japanese</option>
+          <option value="ar">🇸🇦 Arabic</option>
+          <option value="ru">🇷🇺 Russian</option>
+          <option value="ko">🇰🇷 Korean</option>
+          <option value="tr">🇹🇷 Turkish</option>
+        </select>
+        <span class="mono text-xs ml-2" id="autosave-status" title="Saved"><span class="autosave-icon saved">✓</span> <span class="autosave-text">Saved</span></span>
+      </div>
+
+      <!-- 4-Segment View Switcher -->
+      <div class="nav-segment-tabs" role="tablist">
+        <button class="view-tab is-active" id="tab-edit-btn" data-view="edit" role="tab">Edit</button>
+        <button class="view-tab" id="tab-customize-btn" data-view="customize" role="tab">Customize</button>
+        <button class="view-tab" id="tab-aireview-btn" data-view="aireview" role="tab">AI Review</button>
+        <button class="view-tab mobile-only-tab" id="tab-preview-btn" data-view="preview" role="tab">Preview</button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions row align-center gap-3">
+        <button class="btn btn-ghost btn-sm" id="import-btn" type="button">Import</button>
+        <button class="theme-toggle icon-btn" aria-label="Toggle dark mode" title="Dark Mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 0 1 12 3z"/></svg>
+        </button>
+
+        <div class="export-dropdown-wrap position-relative">
+          <button class="btn btn-primary btn-sm" id="export-dropdown-toggle">Download ▾</button>
+          <div class="export-dropdown-menu d-none" id="export-dropdown-menu">
+            <button class="dropdown-item" id="export-pdf-btn">📄 Download PDF (300 DPI Print Quality)</button>
+            <button class="dropdown-item" id="export-pdf-fast-btn">🖨️ Print / Standard PDF</button>
+            <button class="dropdown-item" id="export-docx-btn">📝 Download Word (.docx)</button>
+            <button class="dropdown-item" id="export-txt-btn">📃 Download Plain Text (.txt)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="builder-shell">
+    <!-- LEFT COLUMN: Edit accordion, Customize controls -->
+    <div class="builder-left-column" id="builder-left-column">
+
+      <!-- 1. EDIT VIEW LEFT PANEL -->
+      <nav class="builder-nav" id="view-edit-left" aria-label="Resume sections">
+        <div class="completeness-meter">
+          <div class="completeness-row">
+            <span class="completeness-badge" id="completeness-badge">0%</span>
+            <span class="completeness-label">Resume completeness</span>
+          </div>
+          <div class="completeness-bar-track"><div class="completeness-bar-fill" id="completeness-bar-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="ai-quick-actions">
+          <button class="ai-quick-link" id="ai-quick-summary-btn">✦ Try AI profile summary</button>
+          <button class="ai-quick-link" id="ai-quick-coverletter-btn">✦ Create quick cover letter</button>
+        </div>
+
+        <ul class="section-list" id="section-list">
+          <!-- populated by builder.js: each <li> is a header; active section body renders inline -->
+        </ul>
+
+        <div class="add-section-card-container mt-4">
+          <div class="add-section-header">
+            <h3 class="add-section-title">Add Section</h3>
+          </div>
+          <div class="add-section-grid" id="add-section-grid">
+            <!-- Rendered by builder.js -->
+          </div>
+        </div>
+
+        <!-- Floating Ask AI Writer Button at bottom left -->
+        <div class="floating-ai-writer-wrap">
+          <button class="btn-floating-ai" id="floating-ai-writer-btn">✦ Ask AI writer</button>
+        </div>
+      </nav>
+
+      <!-- 1b. COVER LETTER VIEW LEFT PANEL -->
+      <section class="cl-editor-container d-none" id="view-coverletter-edit" aria-label="Cover Letter details">
+        <!-- CARD 1: Personal Details -->
+        <div class="cl-card">
+          <div class="cl-card-header">
+            <h3 class="cl-card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Personal Details
+            </h3>
+          </div>
+          <div class="cl-grid-2">
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-fullname">Full Name <span class="text-danger">*</span></label>
+              <input type="text" id="cl-input-fullname" class="cl-input" placeholder="e.g. John Doe" autocomplete="name" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-title">
+                Job Title
+                <span class="cl-help-icon" tabindex="0">
+                  ?
+                  <span class="cl-tooltip">The job title or target role you are applying for</span>
+                </span>
+              </label>
+              <input type="text" id="cl-input-title" class="cl-input" placeholder="e.g. Senior Software Engineer" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-address">Address</label>
+              <input type="text" id="cl-input-address" class="cl-input" placeholder="e.g. San Francisco, CA" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-email">Email <span class="text-danger">*</span></label>
+              <input type="email" id="cl-input-email" class="cl-input" placeholder="e.g. john.doe@example.com" autocomplete="email" />
+            </div>
+            <div class="cl-field span-2">
+              <label class="cl-label" for="cl-input-phone">Phone Number</label>
+              <input type="tel" id="cl-input-phone" class="cl-input" placeholder="e.g. +1 (555) 019-2834" autocomplete="tel" />
+            </div>
+          </div>
+
+          <!-- Expandable extra details -->
+          <div class="mt-3">
+            <button type="button" class="btn btn-ghost btn-xs text-muted" id="cl-toggle-extra-personal">
+              <span id="cl-extra-personal-label">＋ Additional contact details (LinkedIn, Website, etc.)</span>
+            </button>
+            <div class="cl-grid-2 mt-2 d-none" id="cl-extra-personal-grid">
+              <div class="cl-field">
+                <label class="cl-label" for="cl-input-linkedin">LinkedIn</label>
+                <input type="text" id="cl-input-linkedin" class="cl-input" placeholder="linkedin.com/in/username" />
+              </div>
+              <div class="cl-field">
+                <label class="cl-label" for="cl-input-website">Website / Portfolio</label>
+                <input type="text" id="cl-input-website" class="cl-input" placeholder="https://yourportfolio.com" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: Employer Details -->
+        <div class="cl-card">
+          <div class="cl-card-header">
+            <h3 class="cl-card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              Employer Details
+            </h3>
+          </div>
+          <div class="cl-grid-2">
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-company">Company Name <span class="text-danger">*</span></label>
+              <input type="text" id="cl-input-company" class="cl-input" placeholder="e.g. Acme Corporation" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-manager">Hiring Manager Name</label>
+              <input type="text" id="cl-input-manager" class="cl-input" placeholder="e.g. Jane Smith (or Hiring Team)" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-company-address">Company Address</label>
+              <input type="text" id="cl-input-company-address" class="cl-input" placeholder="e.g. 100 Innovation Way, Suite 400" />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-date">Date</label>
+              <input type="text" id="cl-input-date" class="cl-input" placeholder="e.g. September 12, 2026" />
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Letter Details -->
+        <div class="cl-card">
+          <div class="cl-card-header row justify-between align-start">
+            <div>
+              <h3 class="cl-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Letter Details
+              </h3>
+              <p class="cl-card-subtitle">3–4 paragraphs explaining why you're the perfect candidate for a specific job</p>
+            </div>
+          </div>
+
+          <!-- Salutation field -->
+          <div class="cl-field mb-3">
+            <label class="cl-label" for="cl-input-salutation">Salutation</label>
+            <input type="text" id="cl-input-salutation" class="cl-input" placeholder="e.g. Dear Hiring Team," />
+          </div>
+
+          <!-- Rich Text Formatting Toolbar -->
+          <div class="cl-toolbar-wrapper">
+            <div class="cl-toolbar" role="toolbar" aria-label="Text formatting">
+              <button type="button" class="cl-tool-btn" id="cl-tb-bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+              <button type="button" class="cl-tool-btn" id="cl-tb-italic" title="Italic (Ctrl+I)"><em>I</em></button>
+              <button type="button" class="cl-tool-btn" id="cl-tb-underline" title="Underline (Ctrl+U)"><u>U</u></button>
+              <button type="button" class="cl-tool-btn" id="cl-tb-strike" title="Strikethrough"><s>S</s></button>
+
+              <span class="cl-tool-divider"></span>
+
+              <button type="button" class="cl-tool-btn" id="cl-tb-bullet" title="Bullet list">• List</button>
+              <button type="button" class="cl-tool-btn" id="cl-tb-number" title="Numbered list">1. List</button>
+              <button type="button" class="cl-tool-btn" id="cl-tb-link" title="Insert link">🔗 Link</button>
+            </div>
+
+            <!-- Integrated AI Action Button -->
+            <button type="button" class="cl-ai-btn" id="cl-ai-help-btn" title="Generate or polish cover letter with AI">
+              <span>✨</span> Get help with writing
+            </button>
+          </div>
+
+          <!-- Letter Body Editor -->
+          <textarea id="cl-letter-body" class="cl-editor-area" rows="14" placeholder="I am writing to express my strong interest in the [Job Title] position at [Company Name]..."></textarea>
+
+          <!-- Editor Footer with Recruiter Tip and Word Counter -->
+          <div class="cl-editor-footer">
+            <span class="text-muted text-xs">
+              💡 <strong>Recruiter tip:</strong> write 250–400 words (3–4 paragraphs) to increase interview chances.
+            </span>
+            <div class="row align-center gap-2">
+              <span id="cl-word-badge" class="cl-word-badge optimal">0 words</span>
+              <span id="cl-char-count" class="text-xs text-muted">0 chars</span>
+            </div>
+          </div>
+
+          <!-- Sign-off and Signature -->
+          <div class="cl-grid-2 mt-4 pt-3" style="border-top: 1px solid var(--border, #e2e8f0);">
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-signoff">Sign-off</label>
+              <input type="text" id="cl-input-signoff" class="cl-input" placeholder="e.g. Sincerely," />
+            </div>
+            <div class="cl-field">
+              <label class="cl-label" for="cl-input-signature">Signature Name</label>
+              <input type="text" id="cl-input-signature" class="cl-input" placeholder="Your Full Name" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hidden container for active section forms -->
+      <section class="builder-form d-none" id="builder-form" aria-label="Edit resume content"></section>
+
+      <!-- 2. CUSTOMIZE VIEW LEFT PANEL -->
+      <section class="builder-customize-panel d-none" id="view-customize-left" aria-label="Customize resume design">
+        <!-- Sub-tabs bar -->
+        <div class="customize-subtabs-bar">
+          <button class="cust-subtab is-active" data-subtab="templates">Template & Colors</button>
+          <button class="cust-subtab" data-subtab="text">Text</button>
+          <button class="cust-subtab" data-subtab="layout">Layout</button>
+        </div>
+
+        <!-- Sub-tab 1: Template & Colors -->
+        <div class="cust-subpanel" id="cust-subpanel-templates">
+          <div class="color-swatches-section mb-4">
+            <label class="field-label-sm mb-2">Main color</label>
+            <div class="swatches-row row gap-2 align-center">
+              <span class="color-swatch swatch-active" style="background:#1c1c1c" data-color="#1c1c1c" data-color-name="Classic Dark" title="Classic Dark">✓</span>
+              <span class="color-swatch" style="background:#5b5bd6" data-color="#5b5bd6" data-color-name="Indigo Accent" title="Indigo Accent"></span>
+              <span class="color-swatch swatch-locked" style="background:#2b6cb0" data-color="#2b6cb0" data-color-name="Blue Accent" title="Locked color (Pro/Admin)">🔒</span>
+              <span class="color-swatch swatch-locked" style="background:#276749" data-color="#276749" data-color-name="Green Accent" title="Locked color (Pro/Admin)">🔒</span>
+              <span class="color-swatch swatch-locked" style="background:#9b2c2c" data-color="#9b2c2c" data-color-name="Red Accent" title="Locked color (Pro/Admin)">🔒</span>
+            </div>
+          </div>
+
+          <!-- Tag Filter Pills -->
+          <div class="filter-pills-scroll mb-4">
+            <button class="filter-pill is-active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="photo">With photo</button>
+            <button class="filter-pill" data-filter="two-column">Two column</button>
+            <button class="filter-pill" data-filter="ats">ATS</button>
+            <button class="filter-pill" data-filter="docx">DOCX</button>
+            <button class="filter-pill" data-filter="experts">Experts</button>
+            <button class="filter-pill" data-filter="customizable">Customizable</button>
+            <button class="filter-pill" data-filter="free">Free</button>
+          </div>
+
+          <!-- Template Cards Grid -->
+          <div class="template-cards-grid" id="template-cards-grid">
+            <!-- populated dynamically by builder.js -->
+          </div>
+        </div>
+
+        <!-- Sub-tab 2: Text Typography -->
+        <div class="cust-subpanel d-none" id="cust-subpanel-text">
+          <h4 class="mt-2 mb-2">Typography</h4>
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-heading-font">Heading font</label>
+              <select id="dz-heading-font" class="form-select">
+                <option value="Fraunces, Georgia, serif">Fraunces (serif)</option>
+                <option value="Georgia, serif">Georgia (serif)</option>
+                <option value="'Playfair Display', serif">Playfair Display (serif)</option>
+                <option value="Inter, sans-serif">Inter (sans)</option>
+                <option value="'Helvetica Neue', Arial, sans-serif">Helvetica (sans)</option>
+                <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dz-body-font">Body font</label>
+              <select id="dz-body-font" class="form-select">
+                <option value="Inter, sans-serif">Inter (sans)</option>
+                <option value="'Helvetica Neue', Arial, sans-serif">Helvetica (sans)</option>
+                <option value="Georgia, serif">Georgia (serif)</option>
+                <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-name-size">Name size <span id="dz-name-size-val" class="text-muted"></span></label>
+              <input type="range" id="dz-name-size" min="18" max="40" step="1">
+            </div>
+            <div class="field">
+              <label for="dz-h2-size">Section heading size <span id="dz-h2-size-val" class="text-muted"></span></label>
+              <input type="range" id="dz-h2-size" min="9" max="18" step="1">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-body-size">Paragraph text size <span id="dz-body-size-val" class="text-muted"></span></label>
+              <input type="range" id="dz-body-size" min="10" max="18" step="1">
+            </div>
+            <div class="field">
+              <label for="dz-contact-size">Contact line size <span id="dz-contact-size-val" class="text-muted"></span></label>
+              <input type="range" id="dz-contact-size" min="9" max="16" step="1">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-tab 3: Layout & Colors -->
+        <div class="cust-subpanel d-none" id="cust-subpanel-layout">
+          <h4 class="mt-2 mb-2">Colors</h4>
+          <div class="field-row">
+            <div class="field"><label for="dz-color-heading">Headings</label><input type="color" id="dz-color-heading"></div>
+            <div class="field"><label for="dz-color-body">Body text</label><input type="color" id="dz-color-body"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="dz-color-accent">Accent / dividers</label><input type="color" id="dz-color-accent"></div>
+            <div class="field"><label for="dz-color-link">Links</label><input type="color" id="dz-color-link"></div>
+          </div>
+
+          <h4 class="mt-4 mb-2">Spacing</h4>
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-line-height">Line height <span id="dz-line-height-val" class="text-muted"></span></label>
+              <input type="range" id="dz-line-height" min="1.1" max="2" step="0.05">
+            </div>
+            <div class="field">
+              <label for="dz-section-spacing">Section spacing <span id="dz-section-spacing-val" class="text-muted"></span></label>
+              <input type="range" id="dz-section-spacing" min="8" max="48" step="2">
+            </div>
+          </div>
+          <div class="field">
+            <label for="dz-page-margin">Page margin <span id="dz-page-margin-val" class="text-muted"></span></label>
+            <input type="range" id="dz-page-margin" min="12" max="64" step="2">
+          </div>
+
+          <h4 class="mt-4 mb-2">Bullet style</h4>
+          <div class="field">
+            <label for="dz-bullet-style">Bullet marker</label>
+            <select id="dz-bullet-style" class="form-select">
+              <option value="disc">• Disc</option>
+              <option value="square">▪ Square</option>
+              <option value="dash">– Dash</option>
+              <option value="arrow">→ Arrow</option>
+              <option value="none">No marker</option>
+            </select>
+          </div>
+
+          <h4 class="mt-4 mb-2">Photo</h4>
+          <div class="field-row">
+            <div class="field">
+              <label class="row gap-2" style="font-weight:400;text-transform:none;letter-spacing:0">
+                <input type="checkbox" id="dz-photo-visible" style="width:auto"> Show photo on resume
+              </label>
+            </div>
+            <div class="field">
+              <label for="dz-photo-url">Photo URL</label>
+              <input type="text" id="dz-photo-url" class="form-input" placeholder="https://...">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-photo-shape">Shape</label>
+              <select id="dz-photo-shape" class="form-select"><option value="circle">Circle</option><option value="square">Square</option></select>
+            </div>
+            <div class="field">
+              <label for="dz-photo-position">Position</label>
+              <select id="dz-photo-position" class="form-select"><option value="left">Left of name</option><option value="right">Right of name</option></select>
+            </div>
+          </div>
+
+          <h4 class="mt-4 mb-2">Page numbers</h4>
+          <div class="field">
+            <label class="row gap-2" style="font-weight:400;text-transform:none;letter-spacing:0">
+              <input type="checkbox" id="dz-pn-enabled" style="width:auto"> Show page numbers
+            </label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="dz-pn-position">Position</label>
+              <select id="dz-pn-position" class="form-select">
+                <option value="bottom-center">Bottom center</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="bottom-right">Bottom right</option>
+                <option value="top-right">Top right</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dz-pn-format">Format</label>
+              <select id="dz-pn-format" class="form-select">
+                <option value="Page {n}">Page 1</option>
+                <option value="{n}">1</option>
+                <option value="{n} / {total}">1 / 3</option>
+                <option value="Page {n} of {total}">Page 1 of 3</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row gap-3 justify-end mt-5" style="padding-bottom:var(--space-6)">
+            <button class="btn btn-ghost btn-sm" id="design-reset-btn">Reset to template default</button>
+          </div>
+        </div>
+      </section>
+
+      
+
+    </div>
+
+    <!-- RIGHT COLUMN: Live Resume Preview or AI Review Dashboard -->
+    <div class="builder-right-column" id="builder-right-column">
+
+      <!-- 1. LIVE PREVIEW PANEL -->
+      <section class="builder-preview" id="view-preview-right" aria-label="Live preview and AI feedback">
+        <button class="btn btn-ghost btn-sm fullscreen-hover-btn" id="fullscreen-preview-btn" title="Open full screen preview">Full-screen preview ↗</button>
+        <div class="preview-toolbar">
+          <div class="zoom-controls">
+            <button class="icon-btn" id="zoom-out-btn" aria-label="Zoom out">–</button>
+            <span id="zoom-level">100%</span>
+            <button class="icon-btn" id="zoom-in-btn" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+
+        <div
+          id="target-role-input"
+          class="target-role-overlay"
+          style="display:none;"
+          contenteditable="true"
+          role="textbox"
+          aria-label="Target job title"
+          data-placeholder="Target job title (optional) — e.g. Senior Product Manager"
+          title="Click to set a target role for AI Review"
+        ></div>
+
+
+        <div id="preview-mount" class="preview-mount-center"></div>
+
+        <!-- Floating Pagination Controls at Bottom Center -->
+        <div class="preview-pagination-bar" id="preview-pagination">
+          <button class="pagination-arrow" id="page-prev-btn">&lt;</button>
+          <span class="pagination-text" id="page-counter">1 / 2</span>
+          <button class="pagination-arrow" id="page-next-btn">&gt;</button>
+        </div>
+      </section>
+
+      <!-- 2. AI REVIEW DASHBOARD PANEL (Replaces Preview when AI Review Tab active) -->
+      <section class="ai-review-dashboard-panel d-none" id="view-aireview-right" aria-label="AI Review Dashboard">
+        <div class="dashboard-header row justify-between align-center mb-4">
+          <h3 class="dashboard-title">AI Review & Analysis</h3>
+          <button class="btn btn-ghost btn-sm" id="ai-dashboard-refresh-btn">🔄 Refresh</button>
+        </div>
+
+        <!-- Summary Assessment Card -->
+        <div class="dashboard-card summary-card mb-4" id="ai-dash-summary-card">
+          <div class="card-head row align-center gap-2 mb-2">
+            <span class="dash-badge badge-good" id="ai-dash-score-badge">★ Good</span>
+            <h4 class="m-0">Summary</h4>
+          </div>
+          <p class="dash-text text-sm text-muted" id="ai-dash-summary-text">
+            The resume showcases a solid foundation with relevant skills and experiences. Enhancing formatting and adding specific metrics would significantly improve its impact.
+          </p>
+        </div>
+
+        <!-- Strengths Card -->
+        <div class="dashboard-card strengths-card mb-4" id="ai-dash-strengths-card">
+          <h4 class="mb-2">Strengths</h4>
+          <ul class="dash-list list-good text-sm" id="ai-dash-strengths-list">
+            <li>You provided a comprehensive educational background with relevant coursework.</li>
+            <li>The project descriptions effectively illustrate hands-on experience with applicable technologies.</li>
+            <li>Inclusion of a diverse skill set demonstrates technical versatility.</li>
+          </ul>
+        </div>
+
+        <!-- Make These Changes Card -->
+        <div class="dashboard-card changes-card" id="ai-dash-changes-card">
+          <h4 class="mb-2">Make these changes</h4>
+          <ul class="dash-list list-changes text-sm" id="ai-dash-changes-list">
+            <li>Add consistent formatting throughout the resume, especially with bullet points and spacing.</li>
+            <li>Include quantifiable metrics in your project descriptions (e.g. 'Reduced processing time by 20%').</li>
+            <li>Clarify your job title and responsibilities in Work Experiences to outline contributions better.</li>
+          </ul>
+        </div>
+      </section>
+
+      
+
+      <!-- Sticky Feedback Tab on Right Viewport Edge -->
+      <button class="feedback-edge-tab" id="feedback-edge-tab">Feedback</button>
+
+    </div>
+  </main>
+
+  <!-- Modal for Importing Resume Data -->
+  <div class="modal-backdrop d-none" id="import-modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Import Existing Resume</h3>
+        <button class="icon-btn" id="close-import-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted text-sm mb-3">
+          Upload an existing resume (PDF or Word) and AI will extract your contact info, summary, experience, education, and skills — or paste plain text / JSON below instead.
+        </p>
+
+        <div class="field mb-4">
+          <label for="import-file-input">Upload PDF, Word, or Text File</label>
+          <input type="file" id="import-file-input" accept=".pdf,.docx,.txt" class="form-input" aria-label="Upload PDF, Word, or Text File">
+          <p class="field-hint" id="import-file-status"></p>
+        </div>
+
+        <div class="field">
+          <label for="import-text-input">Or Paste Resume Text / JSON</label>
+          <textarea id="import-text-input" rows="8" placeholder="Paste your resume content or JSON data here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot row gap-3 justify-end">
+        <button class="btn btn-ghost btn-sm" id="cancel-import-btn">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="confirm-import-btn">Parse & Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Adding a Profile Photo (link or local file upload) -->
+  <div class="modal-backdrop d-none" id="photo-add-modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Add profile photo</h3>
+        <button class="icon-btn" type="button" id="close-photo-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field mb-4">
+          <label for="photo-url-input">Photo from a URL</label>
+          <input type="text" id="photo-url-input" class="form-input" placeholder="https://example.com/photo.jpg">
+        </div>
+        <p class="text-muted text-sm mb-3">— or—</p>
+        <div class="field">
+          <label for="photo-file-input">Upload from device</label>
+          <input type="file" id="photo-file-input" accept="image/jpeg,image/png" class="form-input" title="JPG or PNG, up to 8MB">
+        </div>
+      </div>
+      <div class="modal-foot row gap-3 justify-end">
+        <button class="btn btn-ghost btn-sm" id="cancel-photo-btn" type="button">Cancel</button>
+        <button class="btn btn-accent btn-sm" id="confirm-photo-btn" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-Window Modal: Photo Crop & Rotate -->
+  <div class="modal-backdrop d-none" id="photo-crop-modal">
+    <div class="modal-box" style="max-width: 560px;">
+      <div class="modal-head">
+        <h3>Crop &amp; Rotate Photo</h3>
+        <button class="icon-btn" type="button" id="close-crop-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-xs text-muted mb-3" id="crop-guidance-text" style="line-height: 1.5;">
+          💡 Drag the photo to position, move the selection frame, or drag corner handles to resize.
+        </p>
+
+        <!-- Crop Preview Stage -->
+        <div class="crop-preview-wrapper mb-3" style="position: relative; width: 100%; height: 324px; background: #121214; overflow: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; user-select: none; border: 1px solid var(--border);">
+          <div class="crop-stage" id="crop-stage" style="position: relative; width: 320px; height: 320px; background: #000; overflow: hidden; border-radius: 6px;">
+            <canvas id="crop-canvas" width="320" height="320" style="display: block; width: 320px; height: 320px; cursor: grab;"></canvas>
+            <div id="crop-overlay-frame" class="crop-overlay-circle" style="position: absolute; top: 0; left: 0; width: 200px; height: 200px; border: 2px dashed var(--signal, #2563eb); border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.58); cursor: move; touch-action: none; transform: translate(60px, 60px);">
+              <div class="crop-frame-handle" style="position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+              </div>
+              <div class="crop-resizer crop-nw" data-handle="nw" title="Resize NW"></div>
+              <div class="crop-resizer crop-ne" data-handle="ne" title="Resize NE"></div>
+              <div class="crop-resizer crop-se" data-handle="se" title="Resize SE"></div>
+              <div class="crop-resizer crop-sw" data-handle="sw" title="Resize SW"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Pixel Coordinate & Dimension Inputs (Hidden) -->
+        <div class="crop-coords-card p-3 mb-3 d-none" style="background: var(--bg-recessed); border: 1px solid var(--border); border-radius: var(--radius-md); text-align: left; display: none;">
+          <div class="row justify-between align-center mb-2">
+            <span class="text-xs font-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Crop Coordinates &amp; Dimensions (Pixels)</span>
+            <span class="text-xs text-muted">Canvas: 320 × 320 px</span>
+          </div>
+          <div class="crop-inputs-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <div class="crop-input-group">
+              <label for="crop-input-x" class="text-xs font-medium" style="display: block; margin-bottom: 2px; color: var(--text-muted);">X (Start)</label>
+              <input type="number" id="crop-input-x" class="form-input text-center" min="0" max="320" step="1" value="60" style="padding: 5px 6px; font-size: 13px; font-family: var(--font-mono); width: 100%;">
+            </div>
+            <div class="crop-input-group">
+              <label for="crop-input-y" class="text-xs font-medium" style="display: block; margin-bottom: 2px; color: var(--text-muted);">Y (Start)</label>
+              <input type="number" id="crop-input-y" class="form-input text-center" min="0" max="320" step="1" value="60" style="padding: 5px 6px; font-size: 13px; font-family: var(--font-mono); width: 100%;">
+            </div>
+            <div class="crop-input-group">
+              <label for="crop-input-w" class="text-xs font-medium" style="display: block; margin-bottom: 2px; color: var(--text-muted);">Width</label>
+              <input type="number" id="crop-input-w" class="form-input text-center" min="20" max="320" step="1" value="200" style="padding: 5px 6px; font-size: 13px; font-family: var(--font-mono); width: 100%;">
+            </div>
+            <div class="crop-input-group">
+              <label for="crop-input-h" class="text-xs font-medium" style="display: block; margin-bottom: 2px; color: var(--text-muted);">Height</label>
+              <input type="number" id="crop-input-h" class="form-input text-center" min="20" max="320" step="1" value="200" style="padding: 5px 6px; font-size: 13px; font-family: var(--font-mono); width: 100%;">
+            </div>
+          </div>
+        </div>
+
+        <div class="crop-controls-row row justify-center gap-3 mb-2 flex-wrap align-center">
+          <button class="btn btn-ghost btn-sm" id="crop-rotate-left-btn" type="button" title="Rotate Left 90°">↺ Rotate Left</button>
+          <button class="btn btn-ghost btn-sm" id="crop-rotate-right-btn" type="button" title="Rotate Right 90°">↻ Rotate Right</button>
+          <div class="row align-center gap-2">
+            <label for="crop-ratio-select" class="text-xs text-muted">Crop Ratio:</label>
+            <select id="crop-ratio-select" class="form-input" style="width: auto; padding: 4px 10px; font-size: 13px;">
+              <option value="1:1" selected>1:1 Circle</option>
+              <option value="1:1-sq">1:1 Square</option>
+              <option value="4:3">4:3 Standard</option>
+              <option value="16:9">16:9 Widescreen</option>
+              <option value="3:4">3:4 Portrait</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="row align-center gap-2">
+            <label for="crop-zoom-range" class="text-xs text-muted">Zoom:</label>
+            <input type="range" id="crop-zoom-range" min="0.5" max="3" step="0.1" value="1" style="width: 90px;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot row gap-3 justify-end">
+        <button class="btn btn-ghost btn-sm" id="cancel-crop-btn" type="button">Back</button>
+        <button class="btn btn-primary btn-sm" id="apply-crop-btn" type="button">Apply Crop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Assistant (resume-grounded chat) -->
+  <div class="modal-backdrop d-none" id="ai-chat-modal">
+    <div class="modal-box" id="ai-chat-box">
+      <div class="modal-head">
+        <h3>💬 AI Resume Assistant</h3>
+        <button class="icon-btn" type="button" id="close-ai-chat-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg chat-msg-ai">Hi! I'm your resume coach. I can see your resume — ask me anything, or tap a suggestion below.</div>
+      </div>
+      <div class="chat-quick-chips" id="chat-quick-chips">
+        <button type="button">How do I quantify my bullets?</button>
+        <button type="button">Is my resume ATS-friendly?</button>
+        <button type="button">Rewrite my summary to be stronger</button>
+      </div>
+      <div class="modal-foot chat-input-row">
+        <input class="form-input" id="chat-input" placeholder="Ask about your resume..." autocomplete="off" aria-label="Ask the AI assistant">
+        <button class="btn btn-accent btn-sm" type="button" id="chat-send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Cover Letter Writing Assistant -->
+  <div class="modal-backdrop d-none" id="cl-ai-modal">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-head">
+        <div class="row align-center gap-2">
+          <span style="font-size: 1.25rem;">✨</span>
+          <h3 class="m-0">AI Cover Letter Writer</h3>
+        </div>
+        <button class="icon-btn" type="button" id="close-cl-ai-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted mb-3">
+          Generate a compelling, tailored 3–4 paragraph cover letter customized to your target role and company.
+        </p>
+
+        <div class="field-row mb-3">
+          <div class="field">
+            <label for="cl-ai-role">Target Job Title</label>
+            <input type="text" id="cl-ai-role" class="form-input" placeholder="e.g. Senior Software Engineer" />
+          </div>
+          <div class="field">
+            <label for="cl-ai-company">Target Company</label>
+            <input type="text" id="cl-ai-company" class="form-input" placeholder="e.g. Acme Corp" />
+          </div>
+        </div>
+
+        <div class="field-row mb-3">
+          <div class="field">
+            <label for="cl-ai-manager">Hiring Manager (optional)</label>
+            <input type="text" id="cl-ai-manager" class="form-input" placeholder="e.g. Jane Smith" />
+          </div>
+          <div class="field">
+            <label for="cl-ai-tone">Tone</label>
+            <select id="cl-ai-tone" class="form-select">
+              <option value="professional" selected>Professional & Persuasive</option>
+              <option value="confident">Confident & Impactful</option>
+              <option value="enthusiastic">Passionate & Enthusiastic</option>
+              <option value="executive">Executive & Strategic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field mb-3">
+          <label for="cl-ai-highlights">Key Strengths or Achievements to Highlight (optional)</label>
+          <textarea id="cl-ai-highlights" rows="2" class="form-input" placeholder="e.g. Led redesign increasing user engagement by 35%, 6+ years React experience..."></textarea>
+        </div>
+
+        <div class="field d-none" id="cl-ai-result-wrap">
+          <label class="row justify-between align-center mb-1">
+            <span class="text-xs font-semibold">Generated Cover Letter</span>
+            <span class="text-xs text-muted" id="cl-ai-result-words">0 words</span>
+          </label>
+          <textarea id="cl-ai-result" rows="8" class="form-input" style="font-size: 13px; line-height: 1.55;"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot row gap-2 justify-end">
+        <button class="btn btn-ghost btn-sm" id="cancel-cl-ai-btn" type="button">Cancel</button>
+        <button class="btn btn-accent btn-sm" id="generate-cl-ai-btn" type="button">✦ Generate Letter</button>
+        <button class="btn btn-primary btn-sm d-none" id="apply-cl-ai-btn" type="button">Apply to Letter</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/html2canvas.min.js"></script>
+  <script src="/static/js/jspdf.umd.min.js"></script>
+  <script src="/static/js/state.js"></script>
+  <script src="/static/js/storage.js"></script>
+  <script src="/static/js/auth.js?v=2"></script>
+  <script src="/static/js/template-engine.js"></script>
+  <script src="/static/js/ai-check.js"></script>
+  <script src="/static/js/ai-enhance.js"></script>
+  <script src="/static/js/ai-chat.js"></script>
+  <script src="/static/js/pdf-export.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/builder.js?v=20260907-1"></script>
+</body>
+</html>

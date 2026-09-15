@@ -1,0 +1,35 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <a href="/" class="logo"><span class="logo-mark" aria-hidden="true"></span> {{ site.branding.logo_text if site else 'Resume AI' }}</a>
+        <p class="text-muted footer-desc">
+          {{ site.site.footer_tagline if site else 'AI-checked, AI-enhanced resumes that pass the bots and impress the humans.' }}
+        </p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <a href="/templates">Templates</a>
+        <a href="/builder">Builder</a>
+        <a href="/pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if site and site.site and site.site.contact_email %}<a href="mailto:{{ site.site.contact_email }}">{{ site.site.contact_email }}</a>{% endif %}
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 {{ site.branding.logo_text if site else 'Resume AI' }}. All rights reserved.</span>
+      <span>Made for people who hate writing resumes.</span>
+    </div>
+  </div>
+</footer>
+<script src="/static/js/main.js?v=2.1"></script>
+<script src="/static/js/auth.js?v=2.1"></script>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <main id="main" class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <a href="/" class="logo logo-center">
+            <span class="logo-mark" aria-hidden="true"></span> Resume AI
+          </a>
+        </div>
+
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab is-active" data-tab="login">Sign In</button>
+          <button class="auth-tab" data-tab="register">Create Account</button>
+        </div>
+
+        <!-- Error message -->
+        <div class="auth-error" id="auth-error" role="alert" aria-live="polite"></div>
+
+        <!-- Login Form -->
+        <form class="auth-form" id="login-form">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••••••••" required autocomplete="current-password" minlength="14">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+            Sign In
+          </button>
+          {% if google_client_id %}
+          <div class="auth-google-divider">
+            <span>or continue with</span>
+          </div>
+          <div class="google-btn-wrap" id="google-btn-login" data-client-id="{{ google_client_id }}"></div>
+          {% endif %}
+          <p class="auth-footer-text" style="margin-top:8px">
+            <button type="button" class="auth-link" data-switch="forgot">Forgot password?</button>
+          </p>
+          <p class="auth-footer-text">
+            Don't have an account? <button type="button" class="auth-link" data-switch="register">Create one</button>
+          </p>
+        </form>
+
+        <!-- Forgot Password Form -->
+        <form class="auth-form d-none" id="forgot-form">
+          <p class="text-muted" style="font-size:var(--text-sm);margin-bottom:var(--space-4)">Enter your account email and we'll send you a link to reset your password.</p>
+          <div class="field">
+            <label for="forgot-email">Email</label>
+            <input type="email" id="forgot-email" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="forgot-btn">
+            Send reset link
+          </button>
+          <p class="auth-footer-text">
+            <button type="button" class="auth-link" data-switch="login">Back to sign in</button>
+          </p>
+        </form>
+
+        <!-- Register Form -->
+        <form class="auth-form d-none" id="register-form">
+          <div class="field">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" placeholder="Jane Smith" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" placeholder="Min. 14 characters" required autocomplete="new-password" minlength="14">
+            <p class="field-hint">At least 14 characters with uppercase, lowercase, a number, and a special character.</p>
+          </div>
+          <div class="field">
+            <label for="reg-password-confirm">Confirm Password</label>
+            <input type="password" id="reg-password-confirm" placeholder="••••••••••••••" required autocomplete="new-password" minlength="14">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="register-btn">
+            Create Account
+          </button>
+          {% if google_client_id %}
+          <div class="auth-google-divider">
+            <span>or continue with</span>
+          </div>
+          <div class="google-btn-wrap" id="google-btn-register"></div>
+          {% endif %}
+          <p class="auth-footer-text">
+            Already have an account? <button type="button" class="auth-link" data-switch="login">Sign in</button>
+          </p>
+        </form>
+      </div>
+
+      <div class="auth-features">
+        <h3>Build your perfect resume</h3>
+        <ul class="auth-feature-list">
+          <li>
+            <span class="auth-feature-icon">✓</span>
+            <span>AI-powered resume review & enhancement</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">✓</span>
+            <span>Professional ATS-optimized templates</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">✓</span>
+            <span>Export to PDF & Word with one click</span>
+          </li>
+          <li>
+            <span class="auth-feature-icon">✓</span>
+            <span>Save unlimited resumes to your account</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  {% include "_footer.html" %}
+  {% if google_client_id %}
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  {% endif %}
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script>
+  (function() {
+    // If already logged in, redirect
+    if (Auth.isLoggedIn()) {
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    const tabs = document.querySelectorAll('.auth-tab');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const forgotForm = document.getElementById('forgot-form');
+    const errorEl = document.getElementById('auth-error');
+
+    // Read ?tab= or ?next= from URL
+    const params = new URLSearchParams(window.location.search);
+    const nextUrl = params.get('next') || '/dashboard';
+    if (params.get('tab') === 'register') switchTab('register');
+
+    function switchTab(tab) {
+      tabs.forEach(t => t.classList.toggle('is-active', t.dataset.tab === tab));
+      loginForm.classList.toggle('d-none', tab !== 'login');
+      registerForm.classList.toggle('d-none', tab !== 'register');
+      forgotForm.classList.toggle('d-none', tab !== 'forgot');
+      loginForm.style.display = '';
+      registerForm.style.display = '';
+      forgotForm.style.display = '';
+      // "forgot" isn't a real tab button — only toggle tab styling for login/register
+      if (tab === 'login' || tab === 'register') {
+        tabs.forEach(t => t.classList.toggle('is-active', t.dataset.tab === tab));
+      } else {
+        tabs.forEach(t => t.classList.remove('is-active'));
+      }
+      errorEl.textContent = '';
+      errorEl.className = 'auth-error';
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+    document.querySelectorAll('[data-switch]').forEach(btn =>
+      btn.addEventListener('click', () => switchTab(btn.dataset.switch))
+    );
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.className = 'auth-error is-visible';
+    }
+
+    function setLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.innerHTML = loading
+        ? '<span class="spinner"></span> Please wait…'
+        : btn.dataset.label || btn.textContent;
+    }
+
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.dataset.label = btn.textContent;
+      setLoading(btn, true);
+      try {
+        await Auth.login(
+          document.getElementById('login-email').value,
+          document.getElementById('login-password').value
+        );
+        window.location.href = nextUrl;
+      } catch (err) {
+        showError(err.message);
+        setLoading(btn, false);
+      }
+    });
+
+    // Register
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('reg-password').value;
+      const pwConfirm = document.getElementById('reg-password-confirm').value;
+      if (pw !== pwConfirm) { showError('Passwords do not match'); return; }
+      if (pw.length < 8) { showError('Password must be at least 8 characters'); return; }
+
+      const btn = document.getElementById('register-btn');
+      btn.dataset.label = btn.textContent;
+      setLoading(btn, true);
+      try {
+        await Auth.register(
+          document.getElementById('reg-email').value,
+          pw,
+          document.getElementById('reg-name').value
+        );
+        window.location.href = nextUrl;
+      } catch (err) {
+        showError(err.message);
+        setLoading(btn, false);
+      }
+    });
+    // Forgot password
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('forgot-btn');
+      btn.dataset.label = btn.textContent;
+      setLoading(btn, true);
+      try {
+        await Auth.forgotPassword(document.getElementById('forgot-email').value);
+        errorEl.textContent = 'If an account exists for that email, a reset link is on its way.';
+        errorEl.className = 'auth-error is-visible';
+        errorEl.style.color = 'var(--good)';
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    // ---- Sign in with Google (Google Identity Services) -------------------
+    // Renders the GIS button on whichever form is visible and sends the
+    // returned ID token to Auth.googleLogin() — same flow for login & register
+    // (Google handles both). Verified server-side at /api/auth/google.
+    const GOOGLE_CLIENT_ID = (document.getElementById('google-btn-login')?.dataset.clientId || '').trim();
+    const loginSlot = document.getElementById('google-btn-login');
+    const registerSlot = document.getElementById('google-btn-register');
+
+    async function onGoogleCredential(credential) {
+      try {
+        await Auth.googleLogin(credential);
+        window.location.href = nextUrl;
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function initGoogleButton() {
+      if (!window.google || !google.accounts || !google.accounts.id) return false;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp) => onGoogleCredential(resp.credential),
+        auto_select: false,
+      });
+      const opts = {
+        theme: 'outline', size: 'large', type: 'standard',
+        shape: 'pill', width: (loginSlot && loginSlot.clientWidth) || 280,
+      };
+      if (loginSlot) google.accounts.id.renderButton(loginSlot, { ...opts, text: 'continue_with' });
+      if (registerSlot) google.accounts.id.renderButton(registerSlot, { ...opts, text: 'signup_with' });
+      return true;
+    }
+
+    // The gsi/client script is async — retry until it's available.
+    let attempts = 0;
+    (function waitForGoogle() {
+      if (initGoogleButton() || attempts++ > 100) return;
+      setTimeout(waitForGoogle, 100);
+    })();
+  })();
+  </script>
+</body>
+</html>

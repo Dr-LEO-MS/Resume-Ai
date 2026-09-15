@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview — Resume AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    body { background: var(--bg-recessed); }
+    .preview-bar { display:flex; justify-content:space-between; align-items:center; padding: var(--space-4) var(--space-6); background: var(--bg-raised); border-bottom:1px solid var(--border); }
+    .preview-stage { display:flex; justify-content:center; padding: var(--space-8) var(--space-4); }
+  </style>
+</head>
+<body>
+  <div class="preview-bar">
+    <a href="/builder" class="btn btn-ghost btn-sm">← Back to editor</a>
+    <div class="row gap-2">
+      <button class="btn btn-ghost btn-sm" id="share-btn">Copy share link</button>
+      <button class="btn btn-primary btn-sm" id="download-btn">Download PDF</button>
+    </div>
+  </div>
+  <div class="preview-stage" id="preview-stage"></div>
+
+  <script src="/static/js/html2canvas.min.js"></script>
+  <script src="/static/js/jspdf.umd.min.js"></script>
+  <script src="/static/js/state.js"></script>
+  <script src="/static/js/storage.js"></script>
+  <script src="/static/js/template-engine.js"></script>
+  <script src="/static/js/pdf-export.js"></script>
+  <script>
+    const resume = ResumeStorage.loadLocal();
+    const stage = document.getElementById('preview-stage');
+    if (resume) {
+      TemplateEngine.paginate(resume, stage);
+    } else {
+      stage.innerHTML = '<p class="text-muted">No draft found. <a href="/builder">Start building</a>.</p>';
+    }
+    document.getElementById('download-btn').addEventListener('click', () => {
+      if (resume) {
+        PDFExport.downloadPdf(resume, { token: (typeof Auth !== 'undefined' && Auth.getToken) ? Auth.getToken() : null });
+      } else {
+        alert('No resume draft available to download.');
+      }
+    });
+    document.getElementById('share-btn').addEventListener('click', async () => {
+      try {
+        const { url } = await PDFExport.createShareLink(resume);
+        await navigator.clipboard.writeText(url);
+        alert('Share link copied: ' + url);
+      } catch (e) {
+        alert('Could not create a share link right now.');
+      }
+    });
+  </script>
+</body>
+</html>

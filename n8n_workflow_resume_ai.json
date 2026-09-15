@@ -1,0 +1,167 @@
+{
+  "name": "Resume AI Automation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-ai-trigger",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "id": "webhook-trigger-node",
+      "name": "Webhook Trigger (Receive Resume)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/ai/check",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"resume\": {{ $json.body.resume }},\n  \"target_role\": {{ $json.body.target_role || null }},\n  \"job_description\": {{ $json.body.job_description || null }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        500,
+        180
+      ],
+      "id": "ai-review-node",
+      "name": "AI Review (Check & Score)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/ai/enhance",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"resume\": {{ $('Webhook Trigger (Receive Resume)').item.json.body.resume }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        500,
+        340
+      ],
+      "id": "ai-enhance-node",
+      "name": "AI Enhance (Rewrite Resume)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/ai/suggest-skills",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"resume\": {{ $('Webhook Trigger (Receive Resume)').item.json.body.resume }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        500,
+        500
+      ],
+      "id": "ai-recommendations-node",
+      "name": "AI Recommendation (Suggest Skills)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/export/pdf",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"resume\": {{ $('AI Enhance (Rewrite Resume)').item.json.resume }},\n  \"template\": \"classic\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        750,
+        340
+      ],
+      "id": "export-pdf-node",
+      "name": "Export Enhanced PDF"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        340
+      ],
+      "id": "final-output-node",
+      "name": "Format Final Response"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger (Receive Resume)": {
+      "main": [
+        [
+          {
+            "node": "AI Review (Check & Score)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Enhance (Rewrite Resume)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Recommendation (Suggest Skills)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Enhance (Rewrite Resume)": {
+      "main": [
+        [
+          {
+            "node": "Export Enhanced PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Enhanced PDF": {
+      "main": [
+        [
+          {
+            "node": "Format Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

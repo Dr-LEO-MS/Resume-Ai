@@ -1,0 +1,33 @@
+<a href="#main" class="skip-link">Skip to content</a>
+{% if site and site.branding and site.branding.primary_color and site.branding.primary_color != '#5b5bd6' %}
+<style>
+  /* Admin-set brand color override (Settings -> Branding) */
+  :root, html[data-theme='dark'] { --signal: {{ site.branding.primary_color }}; --signal-deep: {{ site.branding.primary_color }}; }
+</style>
+{% endif %}
+<header class="site-header">
+  <div class="container">
+    <a href="/" class="logo" aria-label="{{ site.site.site_name if site else 'Resume AI' }} home">
+      <span class="logo-mark" aria-hidden="true"></span> {{ site.branding.logo_text if site else 'Resume AI' }}
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/templates" {% if active == 'templates' %}class="is-active"{% endif %}>Templates</a>
+      <a href="/pricing" {% if active == 'pricing' %}class="is-active"{% endif %}>Pricing</a>
+      <a href="/about" {% if active == 'about' %}class="is-active"{% endif %}>About</a>
+      <a href="/contact" {% if active == 'contact' %}class="is-active"{% endif %}>Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 0 1 12 3z"/></svg>
+      </button>
+      <!-- Auth.js dynamically replaces these buttons based on login state -->
+      <a href="/login" class="btn btn-ghost btn-sm">Sign in</a>
+      {% if not site or not site.features or site.features.registration_enabled %}
+      <a href="/login?tab=register" class="btn btn-primary btn-sm">Get started</a>
+      {% endif %}
+    </div>
+    <button class="nav-burger" aria-label="Open navigation" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>

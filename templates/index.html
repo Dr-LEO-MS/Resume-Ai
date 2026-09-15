@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume AI — Build a resume the AI recruiters (and the humans) love</title>
+  <meta name="description" content="Create, AI-check, and AI-enhance your resume in minutes. ATS-optimized templates, real-time feedback, one-click export.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  {% include "_header.html" %}
+
+  <main id="main">
+    <section class="container hero">
+      <div class="hero-copy">
+        <span class="eyebrow">● AI resume review, live</span>
+        <h1>{{ site.site.hero_headline if site else 'Write it once. Let the AI make it hireable.' }}</h1>
+        <p class="lede">{{ site.site.hero_subheadline if site else "Resume AI checks your resume line by line — grammar, clarity, keywords, ATS formatting — then rewrites the weak parts for you. You keep final say on every change." }}</p>
+        <div class="hero-actions">
+          <a href="/builder" class="btn btn-accent">Start building — it's free</a>
+          <a href="/templates" class="btn btn-ghost">Browse templates</a>
+        </div>
+        <div class="hero-proof">
+          <div class="hero-proof-item"><div class="num">40k+</div><div class="label">Resumes reviewed</div></div>
+          <div class="hero-proof-item"><div class="num">92%</div><div class="label">Pass ATS scan</div></div>
+          <div class="hero-proof-item"><div class="num">4.8/5</div><div class="label">Average rating</div></div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="doc-card">
+          <div class="doc-name">Aditi Rao</div>
+          <div class="doc-role">Senior Product Designer</div>
+          <div class="doc-rule"></div>
+          <div class="doc-line w-90"></div>
+          <div class="doc-line w-80"></div>
+          <div class="doc-line w-60" style="margin-bottom:var(--space-4)"></div>
+          <div class="doc-line w-90"></div>
+          <div class="doc-line w-70 doc-highlight"></div>
+          <div class="doc-line w-80"></div>
+
+          <div class="doc-annotation a1"><span class="tag">AI ·</span> "Managed a team" → try a metric: team size, outcome.</div>
+          <div class="doc-annotation a2"><span class="tag">ATS ·</span> Add "Figma" — appears in 8/10 job posts you matched.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section">
+      <div class="eyebrow">Why Resume AI</div>
+      <h2 style="margin-top:var(--space-3)">Everything a resume needs, checked automatically</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+          </div>
+          <h3>AI content check</h3>
+          <p class="text-muted">Every section is scored for grammar, clarity, and keyword match against real job postings in your field.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3>One-click enhance</h3>
+          <p class="text-muted">Weak bullet points get rewritten with stronger verbs and real metrics — you approve every change.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </div>
+          <h3>ATS-safe templates</h3>
+          <p class="text-muted">8 layouts built to parse cleanly in Workday, Greenhouse, and Taleo — no tables, no text boxes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section-tight">
+      <div class="eyebrow">How it works</div>
+      <h2 style="margin-top:var(--space-3)">From blank page to offer-ready</h2>
+      <div class="workflow">
+        <div class="workflow-step"><div class="step-num">01</div><h4>Choose template</h4><p>Pick a layout — swap it anytime without losing content.</p></div>
+        <div class="workflow-step"><div class="step-num">02</div><h4>Fill content</h4><p>Guided forms for every section, with a live preview beside you.</p></div>
+        <div class="workflow-step"><div class="step-num">03</div><h4>AI review</h4><p>Get a score and specific, line-level fixes.</p></div>
+        <div class="workflow-step"><div class="step-num">04</div><h4>AI enhance</h4><p>Accept AI rewrites for weak bullets in one click.</p></div>
+        <div class="workflow-step"><div class="step-num">05</div><h4>Download</h4><p>Export as PDF, Word, or a shareable link.</p></div>
+      </div>
+    </section>
+
+    <section class="container section-tight">
+      <div class="eyebrow">Templates</div>
+      <h2 style="margin-top:var(--space-3)">Designed to be read by humans, parsed by bots</h2>
+      <div class="carousel">
+        {% for t in ['Classic', 'Modern', 'Minimal', 'Bold', 'Executive', 'Compact'] %}
+        <a href="/templates" class="template-thumb">
+          <div class="thumb-preview">
+            <div class="doc-line w-90" style="height:12px;margin-bottom:10px"></div>
+            <div class="doc-line w-60"></div>
+            <div class="doc-line w-80" style="margin-top:16px"></div>
+            <div class="doc-line w-70"></div>
+            <div class="doc-line w-90"></div>
+          </div>
+          <div class="thumb-label">{{ t }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="container section-tight">
+      <div class="eyebrow">Results</div>
+      <h2 style="margin-top:var(--space-3)">People who fixed their resume in one sitting</h2>
+      <div class="testimonial-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"The AI caught three bullet points that just said 'responsible for.' Rewrote them with real numbers in seconds."</p>
+          <div class="testimonial-author">Priya S. — Data Analyst</div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Went from 61 to 89 on the ATS score after applying maybe six suggestions. Got two interviews that week."</p>
+          <div class="testimonial-author">Marcus T. — Software Engineer</div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"I liked that it explained why each change helped instead of just rewriting silently."</p>
+          <div class="testimonial-author">Fatima N. — Marketing Lead</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <div class="cta-banner">
+        <h2>Your next resume takes 15 minutes, not a weekend.</h2>
+        <p class="lede" style="text-align:center">Start from a template, or paste in what you already have.</p>
+        <a href="/builder" class="btn btn-accent">Start building free</a>
+      </div>
+    </section>
+  </main>
+
+  {% include "_footer.html" %}
+</body>
+</html>
