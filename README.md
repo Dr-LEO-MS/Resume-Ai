@@ -225,4 +225,5 @@ The AI Review / AI Enhance / AI Suggest system was rebuilt to be genuinely profe
 - **Accept / Edit / Reject on every suggestion (spec §7, §9)**: suggestion cards now have all three actions — Edit opens an inline textarea whose edited text is what Accept applies; accepted changes update the live preview immediately.
 
 #   R e s u m e - A i  
+ #   R e s u m e - A i  
  
