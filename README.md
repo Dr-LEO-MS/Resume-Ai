@@ -224,7 +224,4 @@ The AI Review / AI Enhance / AI Suggest system was rebuilt to be genuinely profe
 - **GitHub field + short clickable links (spec §8, §12–§14, §16)**: new GitHub profile field alongside LinkedIn/Portfolio everywhere (builder form, resume state, PDF/DOCX/TXT export, import parsing). Contact links now render as short labels (`linkedin.com/in/you`) with clickable underlying URLs — long URLs are never displayed. The new Check Links tool reviews presence/length/duplicates and explicitly does not claim links work.
 - **Accept / Edit / Reject on every suggestion (spec §7, §9)**: suggestion cards now have all three actions — Edit opens an inline textarea whose edited text is what Accept applies; accepted changes update the live preview immediately.
 
-#   R e s u m e - A i  
- #   R e s u m e - A i  
- #   R e s u m e - A i  
- 
+#
