@@ -9,9 +9,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: resumeai-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_EMAIL
@@ -22,7 +20,8 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-
-databases:
-  - name: resumeai-db
-    plan: free
+# NOTE: No databases: block here on purpose.
+# Render allows only ONE active free-tier database per account, and you
+# already have one (resume_ai_1abc). Creating 'resumeai-db' here is what
+# caused: "cannot have more than one active free tier database".
+# Set DATABASE_URL manually (see below) to your existing DB's connection string.
