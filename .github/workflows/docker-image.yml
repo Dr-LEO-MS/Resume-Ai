@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libpangoft2-1.0-0 \
-            libcairo2 libjpeg62-turbo zlib1g shared-mime-info
+            libcairo2 libjpeg-turbo8 zlib1g shared-mime-info
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

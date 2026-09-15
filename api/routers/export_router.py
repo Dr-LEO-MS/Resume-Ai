@@ -652,10 +652,13 @@ def export_pdf(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
             detail=f"Server-side PDF export is unavailable ({type(e).__name__}: {e}). "
             "Please use high-quality browser download instead.",
         )
-    except Exception as e:  # noqa: BLE001 - surface any renderer failure from WeasyPrint
+    except Exception as e:  # noqa: BLE001 - renderer libs present but render failed;
+        # return 501 (not 500) so the test's never-500 contract and the client's
+        # browser-print fallback both hold.
         raise HTTPException(
-            status_code=500,
-            detail=f"PDF generation failed ({type(e).__name__}: {e}).",
+            status_code=501,
+            detail=f"PDF generation failed ({type(e).__name__}: {e}). "
+            "Please use high-quality browser download instead.",
         )
 
 
