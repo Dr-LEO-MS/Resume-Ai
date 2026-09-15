@@ -9,6 +9,7 @@ python-multipart==0.0.9
 
 # Database
 sqlalchemy>=2.0.41  # >=2.0.41 fixes typing.Union incompatibility on Python 3.14+
+psycopg2-binary>=2.9.9  # Postgres driver for DATABASE_URL (production); SQLite works locally without it
 
 # Auth
 # NOTE: passlib removed — passlib 1.7.4 is incompatible with bcrypt>=4.1

@@ -50,7 +50,7 @@ def run_migrations():
             cols = {c["name"] for c in inspector.get_columns("users")}
             new_user_cols = {
                 "google_id": "VARCHAR",
-                "is_deleted": "BOOLEAN DEFAULT 0",
+                "is_deleted": "BOOLEAN DEFAULT FALSE",
                 "deleted_at": "DATETIME",
                 "deleted_by": "VARCHAR",
                 "failed_login_attempts": "INTEGER DEFAULT 0",
@@ -60,13 +60,13 @@ def run_migrations():
                 "bio": "TEXT",
                 "profile_picture_url": "VARCHAR",
                 "profile_slug": "VARCHAR",
-                "is_profile_public": "BOOLEAN DEFAULT 0",
+                "is_profile_public": "BOOLEAN DEFAULT FALSE",
                 "timezone": "VARCHAR DEFAULT 'UTC'",
                 "date_format": "VARCHAR DEFAULT 'MM/DD/YYYY'",
                 "locale": "VARCHAR DEFAULT 'en'",
-                "notifications_email": "BOOLEAN DEFAULT 1",
-                "notifications_product": "BOOLEAN DEFAULT 1",
-                "has_set_password": "BOOLEAN DEFAULT 0",
+                "notifications_email": "BOOLEAN DEFAULT TRUE",
+                "notifications_product": "BOOLEAN DEFAULT TRUE",
+                "has_set_password": "BOOLEAN DEFAULT FALSE",
                 "token_version": "INTEGER DEFAULT 0",
             }
             with engine.begin() as conn:
@@ -76,21 +76,23 @@ def run_migrations():
                         print(f"[init_db] Migrated users table: added {col_name} column.")
 
                 # Backfill default values for existing rows
+                # NOTE: use TRUE/FALSE (not 1/0) for booleans so this works on BOTH
+                # SQLite and Postgres (Postgres rejects integer literals for booleans).
                 conn.execute(text("UPDATE users SET timezone = 'UTC' WHERE timezone IS NULL"))
                 conn.execute(text("UPDATE users SET date_format = 'MM/DD/YYYY' WHERE date_format IS NULL"))
                 conn.execute(text("UPDATE users SET locale = 'en' WHERE locale IS NULL"))
-                conn.execute(text("UPDATE users SET notifications_email = 1 WHERE notifications_email IS NULL"))
-                conn.execute(text("UPDATE users SET notifications_product = 1 WHERE notifications_product IS NULL"))
-                conn.execute(text("UPDATE users SET is_profile_public = 0 WHERE is_profile_public IS NULL"))
+                conn.execute(text("UPDATE users SET notifications_email = TRUE WHERE notifications_email IS NULL"))
+                conn.execute(text("UPDATE users SET notifications_product = TRUE WHERE notifications_product IS NULL"))
+                conn.execute(text("UPDATE users SET is_profile_public = FALSE WHERE is_profile_public IS NULL"))
                 conn.execute(text("UPDATE users SET token_version = 0 WHERE token_version IS NULL"))
-                conn.execute(text("UPDATE users SET is_deleted = 0 WHERE is_deleted IS NULL"))
+                conn.execute(text("UPDATE users SET is_deleted = FALSE WHERE is_deleted IS NULL"))
                 conn.execute(text("UPDATE users SET failed_login_attempts = 0 WHERE failed_login_attempts IS NULL"))
-                conn.execute(text("UPDATE users SET has_set_password = 1 WHERE google_id IS NULL AND (has_set_password = 0 OR has_set_password IS NULL)"))
+                conn.execute(text("UPDATE users SET has_set_password = TRUE WHERE google_id IS NULL AND (has_set_password = FALSE OR has_set_password IS NULL)"))
 
         if "resumes" in inspector.get_table_names():
             cols = {c["name"] for c in inspector.get_columns("resumes")}
             new_resume_cols = {
-                "is_deleted": "BOOLEAN DEFAULT 0",
+                "is_deleted": "BOOLEAN DEFAULT FALSE",
                 "deleted_at": "DATETIME",
                 "deleted_by": "VARCHAR",
             }
