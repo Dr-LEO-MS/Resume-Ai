@@ -1,0 +1,28 @@
+# Render Blueprint - deploy this repo to Render (free tier supported).
+# Push to GitHub, then in Render: New > Blueprint > pick this repo.
+services:
+  - type: web
+    name: resume-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resumeai-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@resumeai.com
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+databases:
+  - name: resumeai-db
+    plan: free
