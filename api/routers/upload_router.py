@@ -20,7 +20,14 @@ from .. import models, auth
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads" / "photos"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Serverless deploy dir (e.g. Vercel) is read-only: fall back to a writable
+    # temp dir so the app still boots. Files written there are ephemeral.
+    import tempfile
+    UPLOAD_DIR = Path(tempfile.gettempdir()) / "resumeai" / "photos"
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8MB raw upload ceiling, before compression
 MAX_DIMENSION = 800  # px — resumes never need a larger photo than this

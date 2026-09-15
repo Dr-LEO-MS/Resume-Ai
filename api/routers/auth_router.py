@@ -28,7 +28,14 @@ from ..google_auth import verify_id_token, GoogleAuthError
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 AVATAR_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads" / "avatars"
-AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Serverless deploy dir (e.g. Vercel) is read-only: fall back to a writable
+    # temp dir so the app still boots. Files written there are ephemeral.
+    import tempfile
+    AVATAR_DIR = Path(tempfile.gettempdir()) / "resumeai" / "avatars"
+    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 MAX_AVATAR_BYTES = 8 * 1024 * 1024
 
