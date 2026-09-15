@@ -14,6 +14,11 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000
+# Build stamp: baked into the image so /api/version reports the exact commit.
+ARG BUILD_SHA=dev
+ENV BUILD_SHA=${BUILD_SHA}
+ARG BUILD_TIME=""
+ENV BUILD_TIME=${BUILD_TIME}
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt

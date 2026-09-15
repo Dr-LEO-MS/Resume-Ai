@@ -6,6 +6,7 @@ GET  /r/{slug}       — public read-only view of a shared resume
 -------------------------------------------------------------------------
 """
 
+import os
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -17,6 +18,19 @@ from ..routers.export_router import render_html
 
 router = APIRouter(tags=["misc"])
 templates = Jinja2Templates(directory="templates")
+
+# ---- Version sync -----------------------------------------------------------
+# The backend stamps every deploy with a build SHA + timestamp. The frontend
+# reads /api/version on load and warns if the served client bundle's stamp
+# differs from the backend's — this is how frontend/backend mismatch is
+# prevented even though both ship in the same monolith deploy.
+BUILD_SHA = os.getenv("BUILD_SHA", os.getenv("VERCEL_GIT_COMMIT_SHA", "dev"))
+BUILD_TIME = os.getenv("BUILD_TIME", "")
+
+
+@router.get("/api/version")
+def get_version():
+    return {"build_sha": BUILD_SHA, "build_time": BUILD_TIME}
 
 
 @router.post("/api/contact")

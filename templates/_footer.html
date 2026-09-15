@@ -33,3 +33,24 @@
 </footer>
 <script src="/static/js/main.js?v=2.1"></script>
 <script src="/static/js/auth.js?v=2.1"></script>
+<!-- Version sync: compare this page's build stamp with the running backend.
+     If they differ (e.g. a cached page hitting a fresh deploy), show a toast
+     so the user reloads instead of hitting mismatched client/server behavior. -->
+<script>
+(function () {
+  var pageSha = "{{ build_sha | default('dev') }}";
+  fetch("/api/version", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (v) {
+      if (!v || !v.build_sha) return;
+      if (pageSha !== "dev" && v.build_sha !== "dev" && pageSha !== v.build_sha) {
+        if (typeof window.showToast === "function") {
+          window.showToast("A new version is available — please reload the page.", "default");
+        } else {
+          console.warn("[version-sync] page " + pageSha + " != backend " + v.build_sha);
+        }
+      }
+    })
+    .catch(function () { /* version check is best-effort */ });
+})();
+</script>

@@ -98,7 +98,10 @@ def render_page(request: Request, template_name: str, active: str, **extra):
         site = settings_service.get_all(db)
     finally:
         db.close()
-    context = {"request": request, "active": active, "site": site, **extra}
+    # Build stamp — lets the frontend /api/version check detect a stale
+    # client bundle vs the running backend (same SHA as /api/version).
+    build_sha = os.getenv("BUILD_SHA", os.getenv("VERCEL_GIT_COMMIT_SHA", "dev"))
+    context = {"request": request, "active": active, "site": site, "build_sha": build_sha, **extra}
     return templates.TemplateResponse(request=request, name=template_name, context=context)
 
 
