@@ -14,10 +14,13 @@ import typing
 from os import getenv
 import sqlalchemy.util.typing as _sa_typing
 
-# Fix SQLAlchemy typing issue on Python 3.14+
-if not hasattr(_sa_typing, "_py314_patched"):
-    _sa_typing.make_union_type = lambda *types: typing.Union[types]
-    _sa_typing._py314_patched = True
+# Fix SQLAlchemy typing issue on Python 3.14+.
+# NOTE: setattr with a string literal is used deliberately so Pylance
+# (static analysis) does not flag ad-hoc attributes on the third-party
+# sqlalchemy.util.typing module.
+if not globals().get("_PY314_UNION_PATCH_APPLIED", False):
+    setattr(_sa_typing, "make_union_type", lambda *types: typing.Union[types])  # type: ignore[attr-defined]
+    globals()["_PY314_UNION_PATCH_APPLIED"] = True
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base

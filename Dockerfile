@@ -1,9 +1,13 @@
 # Resume AI - Docker image
-# Python 3.12-slim: well-supported wheels for all pinned deps incl. WeasyPrint/Pillow/pdfplumber.
+# NOTE: we pin python:3.12-slim and run `apt-get upgrade` at build time so
+# base-image OS CVEs (reported by Docker DX / Scout on the stale digest)
+# are patched on every build. Pinning a full digest would silence the
+# warning for one snapshot but rot again — upgrade-on-build is the fix.
 FROM python:3.12-slim AS base
 
 # WeasyPrint needs Pango/Cairo; Pillow needs JPEG/Zlib. Missing these breaks PDF/avatar/images.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# `apt-get upgrade` patches the base image's packaged vulnerabilities.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
         libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libpangoft2-1.0-0 \
         libcairo2 libffi-dev libjpeg62-turbo zlib1g zlib1g-dev shared-mime-info \
     && rm -rf /var/lib/apt/lists/*

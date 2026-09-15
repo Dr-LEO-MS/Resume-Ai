@@ -20,6 +20,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
 
+# Pillow ≥10 moved LANCZOS under Image.Resampling; older stubs/versions
+# expose Image.LANCZOS. Resolve via getattr so both Pylance (old stubs)
+# and every runtime Pillow stay happy.
+_LANCZOS: int = int(
+    getattr(getattr(Image, "Resampling", Image), "LANCZOS", getattr(Image, "LANCZOS", 1))
+)
+
 from .. import models, schemas, auth
 from ..database import get_db
 from ..email_service import send_password_reset_email
@@ -281,7 +288,7 @@ async def upload_avatar(
         raise HTTPException(status_code=400, detail="Could not process image — it may be corrupted.")
 
     # Resize/crop to 400x400
-    image.thumbnail((400, 400), Image.LANCZOS)
+    image.thumbnail((400, 400), _LANCZOS)
 
     filename = f"avatar-{current_user.id}-{uuid.uuid4().hex[:8]}.jpg"
     filepath = AVATAR_DIR / filename
@@ -343,10 +350,12 @@ def delete_account(
 def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if user:
-        user.reset_token = auth.generate_reset_token()
+        reset_token = auth.generate_reset_token()
+        user.reset_token = reset_token
         user.reset_token_expires = datetime.utcnow() + timedelta(minutes=auth.RESET_TOKEN_EXPIRE_MINUTES)
         db.commit()
-        send_password_reset_email(user.email, user.reset_token, db=db)
+        if user.email:
+            send_password_reset_email(user.email, reset_token, db=db)
     return {"message": "If an account exists for that email, a reset link has been sent."}
 
 

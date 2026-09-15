@@ -15,6 +15,13 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from PIL import Image, ImageOps
 
+# Pillow ≥10 moved LANCZOS under Image.Resampling; older stubs/versions
+# expose Image.LANCZOS. Resolve via getattr so both Pylance (old stubs)
+# and every runtime Pillow stay happy.
+_LANCZOS: int = int(
+    getattr(getattr(Image, "Resampling", Image), "LANCZOS", getattr(Image, "LANCZOS", 1))
+)
+
 from .. import models, auth
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
@@ -54,7 +61,7 @@ async def upload_photo(
         raise HTTPException(status_code=400, detail="Could not read this image — it may be corrupted.")
 
     # Downscale to a sensible max dimension, preserving aspect ratio.
-    image.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
+    image.thumbnail((MAX_DIMENSION, MAX_DIMENSION), _LANCZOS)
 
     filename = f"{current_user.id}-{uuid.uuid4().hex[:8]}.jpg"
     filepath = UPLOAD_DIR / filename

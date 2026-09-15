@@ -2,6 +2,8 @@
 
 An AI-powered resume builder: create a resume, get it AI-reviewed for grammar/clarity/ATS/keywords, one-click AI-enhance weak bullet points, export as PDF/Word, or share a link.
 
+**▶ Live site:** **[https://resume-ai-leo.vercel.app](https://resume-ai-leo.vercel.app)** — deployed on **Vercel** (serverless Python/ASGI via `a2wsgi`), backed by a **Postgres** database.
+
 ## Stack
 
 - **Frontend:** plain HTML5 + CSS3 + vanilla JS (no framework). One shared stylesheet (`static/css/styles.css`), one shared theme system (CSS custom properties, light/dark mode).
@@ -103,7 +105,7 @@ export JWT_SECRET=some-long-random-string
 
 # Optional — enables "Continue with Google" on /login. Create an OAuth 2.0
 # Web client at console.cloud.google.com (Authorized JavaScript origins must
-# include http://127.0.0.1:8000 and your production domain), then set:
+# include http://127.0.0.1:8000 and https://resume-ai-leo.vercel.app), then set:
 export GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
 
 uvicorn main:app --reload
@@ -165,9 +167,10 @@ Key endpoints:
 
 - Set `DATABASE_URL` to a managed Postgres instance; SQLite is fine for a single-instance demo but won't survive redeploys on most PaaS platforms.
 - Set `JWT_SECRET` to a long random value — never use the dev default in production.
+- Set `APP_BASE_URL=https://resume-ai-leo.vercel.app` so password-reset and plan emails link to the live domain (defaults to `http://127.0.0.1:8000` for local dev).
 - Set `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `DEEPSEEK_API_KEY` as a secret, not in source control.
 - `weasyprint` needs system libraries (Pango/Cairo) — on Debian/Ubuntu: `apt-get install libpango-1.0-0 libpangocairo-1.0-0`. If you'd rather avoid that dependency, or it isn't installable on your host (e.g. Windows), no problem: the "Download PDF" button automatically falls back to the browser's print-to-PDF, then to client-side raster rendering — nothing extra is required, so PDF export always works.
-- Put this behind HTTPS and set `allow_origins` in `main.py`'s CORS middleware to your real domain before going live.
+- Put this behind HTTPS and set `allow_origins` in `main.py`'s CORS middleware to `https://resume-ai-leo.vercel.app` before going live.
 
 ## Recent fixes (this round)
 
