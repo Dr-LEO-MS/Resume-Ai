@@ -16,3 +16,5 @@ pip_err.txt
 *.db
 static/uploads/
 .env
+.vscode/
+
