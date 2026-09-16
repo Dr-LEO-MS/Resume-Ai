@@ -538,3 +538,75 @@ def test_pdf_filename_helper():
     assert _pdf_filename({"personal": {"fullName": "Subhash M"}}) == "Subhash_M_Resume.pdf"
     assert _pdf_filename({"personal": {"fullName": 'Jo:e <Bad> "Name"?'}}) == "Joe_Bad_Name_Resume.pdf"
     assert _pdf_filename({"personal": {}}) == "Resume_Resume.pdf"
+
+
+def test_download_all_resumes_zip():
+    """GET /api/resumes/download-all returns ONE ZIP containing one document per
+    saved item (a PDF when WeasyPrint is available, otherwise a Word .docx),
+    de-dupes identically named entries, and fails gracefully when empty."""
+    import io
+    import uuid
+    import zipfile
+
+    with TestClient(main.app) as c:
+        email = f"zipuser_{uuid.uuid4().hex[:8]}@example.com"
+        reg = c.post(
+            "/api/auth/register",
+            json={"email": email, "password": "StrongPassword123!", "full_name": "Zip Tester"},
+        )
+        assert reg.status_code == 201
+        headers = {"Authorization": f"Bearer {reg.json()['access_token']}"}
+
+        # 1. Nothing saved yet -> clean 404 (never a 500 / traceback).
+        empty = c.get("/api/resumes/download-all", headers=headers)
+        assert empty.status_code == 404
+        assert isinstance(empty.json().get("detail"), str)
+
+        # 2. A free plan allows one resume + one cover letter. Both carry the SAME
+        #    person name, so the ZIP entry de-duplication path is exercised too.
+        resume = c.post(
+            "/api/resumes",
+            json={"name": "Alpha Resume", "template": "classic", "content": sample_resume},
+            headers=headers,
+        )
+        assert resume.status_code == 201
+        cover_letter = c.post(
+            "/api/resumes",
+            json={
+                "name": "Beta Cover Letter",
+                "doc_type": "cover_letter",
+                "template": "cl-modern",
+                "content": sample_resume,
+            },
+            headers=headers,
+        )
+        assert cover_letter.status_code == 201
+
+        res = c.get("/api/resumes/download-all", headers=headers)
+        assert res.status_code == 200
+        assert res.headers["content-type"] == "application/zip"
+        assert "attachment" in res.headers["content-disposition"]
+        assert "resumes.zip" in res.headers["content-disposition"]
+
+        zf = zipfile.ZipFile(io.BytesIO(res.content))
+        assert zf.testzip() is None  # archive is not corrupt
+        names = zf.namelist()
+        assert len(names) == 2        # exactly one document per saved item
+        assert len(set(names)) == 2   # identical person names must not collide
+        for name in names:
+            data = zf.read(name)
+            assert len(data) > 500
+            if name.lower().endswith(".pdf"):
+                assert data[:5] == b"%PDF-"
+            else:
+                # Word .docx is itself a ZIP container (PK\x03\x04).
+                assert name.lower().endswith(".docx")
+                assert data[:2] == b"PK"
+
+        # 3. Filtering by doc_type returns just that type.
+        only_resume = c.get("/api/resumes/download-all?doc_type=resume", headers=headers)
+        assert only_resume.status_code == 200
+        assert len(zipfile.ZipFile(io.BytesIO(only_resume.content)).namelist()) == 1
+
+        # 4. Auth is required.
+        assert c.get("/api/resumes/download-all").status_code in (401, 403)

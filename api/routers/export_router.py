@@ -1123,3 +1123,41 @@ def create_share_link(payload: schemas.ExportRequest, db: Session = Depends(get_
     db.add(resume_row)
     db.commit()
     return {"url": f"/r/{slug}"}
+
+
+# ---------------------------------------------------------------------------
+# Bulk-export helpers — used by GET /api/resumes/download-all
+# ---------------------------------------------------------------------------
+def build_pdf_bytes(resume: dict) -> bytes | None:
+    """Server-rendered vector PDF bytes for one resume, or None when WeasyPrint
+    (or its Pango/Cairo system libraries) isn't available. Never raises — the
+    bulk exporter then falls back to Word (.docx) for that document."""
+    try:
+        from weasyprint import HTML  # optional dependency, imported lazily
+    except Exception:  # noqa: BLE001 - package or system libs missing
+        return None
+    try:
+        return HTML(string=render_html(resume)).write_pdf()
+    except Exception:  # noqa: BLE001 - renderer present but render failed
+        return None
+
+
+def build_docx_bytes(resume: dict, db: Session) -> bytes | None:
+    """Word (.docx) bytes for one resume, reusing the /api/export/docx builder so
+    an archived document matches a single Word export. Returns None when Word
+    export is disabled site-wide or python-docx is missing. Never raises."""
+    try:
+        resp = export_docx(schemas.ExportRequest(resume=resume), db)
+    except Exception:  # noqa: BLE001 - 403 disabled / 501 missing dep / render fail
+        return None
+    body = getattr(resp, "body", None)
+    return bytes(body) if body is not None else None
+
+
+def document_basename(resume: dict, fallback: str = "Resume") -> str:
+    """ZIP-entry/filename-safe base name taken from the person's full name
+    (e.g. 'Jo:e <Bad> "Name"?' -> 'Joe_Bad_Name')."""
+    name = (resume.get("personal") or {}).get("fullName") or fallback
+    safe = re.sub(r'[<>:"/\\|?*]+', "", name).strip().replace(" ", "_")
+    safe = re.sub(r"_+", "_", safe).strip("_")
+    return safe or fallback

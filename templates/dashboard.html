@@ -55,7 +55,10 @@
       <section id="section-resumes">
         <div class="row justify-between">
           <h1 class="h2">My resumes</h1>
-          <a href="/builder" class="btn btn-primary btn-sm" id="new-resume-btn">+ New resume</a>
+          <div class="row gap-2">
+            <button type="button" class="btn btn-ghost btn-sm" id="download-all-resumes-btn" onclick="downloadAllResumes()" title="Download every saved resume as a ZIP">⬇ Download all</button>
+            <a href="/builder" class="btn btn-primary btn-sm" id="new-resume-btn">+ New resume</a>
+          </div>
         </div>
         <div id="resume-limit-banner" class="limit-banner d-none">
           <span class="text-muted" style="font-size:var(--text-sm)" id="resume-limit-text"></span>
@@ -68,7 +71,10 @@
 
         <div class="row justify-between mt-6">
           <h2 class="h3">My cover letters</h2>
-          <a href="/builder?doc_type=cover_letter" class="btn btn-ghost btn-sm" id="new-cover-letter-btn">+ New cover letter</a>
+          <div class="row gap-2">
+            <button type="button" class="btn btn-ghost btn-sm" id="download-all-cover-letters-btn" onclick="downloadAllCoverLetters()" title="Download every saved cover letter as a ZIP">⬇ Download all</button>
+            <a href="/builder?doc_type=cover_letter" class="btn btn-ghost btn-sm" id="new-cover-letter-btn">+ New cover letter</a>
+          </div>
         </div>
         <div id="cover-letter-limit-banner" class="limit-banner d-none">
           <span class="text-muted" style="font-size:var(--text-sm)" id="cover-letter-limit-text"></span>
@@ -592,6 +598,42 @@
         emptyEl.querySelector('p').textContent = 'Error loading — please try again.';
       }
     }
+
+    // ---- Download all (ZIP archive of every saved document) ----------------
+    // Wire the "⬇ Download all" buttons to GET /api/resumes/download-all, which
+    // returns a single ZIP containing one PDF (or Word fallback) per saved item.
+    async function downloadAllDocuments(docType) {
+      const isCL = docType === 'cover_letter';
+      const label = isCL ? 'cover letters' : 'resumes';
+      const btn = document.getElementById(isCL ? 'download-all-cover-letters-btn' : 'download-all-resumes-btn');
+      const original = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+      try {
+        const res = await Auth.apiFetch(`/api/resumes/download-all?doc_type=${docType}`);
+        if (!res.ok) {
+          let detail = `Could not prepare the download (${res.status}).`;
+          try { const j = await res.json(); if (j && j.detail) detail = j.detail; } catch (_) {}
+          throw new Error(detail);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = isCL ? 'cover-letters.zip' : 'resumes.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        window.showToast(`Downloaded all ${label} ✓`, 'success');
+      } catch (err) {
+        window.showToast(err.message || 'Download failed.', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = original; }
+      }
+    }
+
+    window.downloadAllResumes = function() { return downloadAllDocuments('resume'); };
+    window.downloadAllCoverLetters = function() { return downloadAllDocuments('cover_letter'); };
 
     async function loadLimits() {
       try {

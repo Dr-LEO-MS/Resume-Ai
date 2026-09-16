@@ -15,7 +15,7 @@ Provides:
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from .. import models, schemas, auth, settings_service
@@ -74,6 +74,78 @@ def list_resumes(
     if doc_type:
         query = query.filter(models.Resume.doc_type == doc_type)
     return [_serialize(r) for r in query.all()]
+
+
+def _unique_zip_name(base: str, ext: str, used: set) -> str:
+    """Ensures every archive entry has a distinct name (two resumes can share a
+    title), appending _2, _3, … on collision."""
+    name = f"{base}{ext}"
+    suffix = 2
+    while name.lower() in used:
+        name = f"{base}_{suffix}{ext}"
+        suffix += 1
+    used.add(name.lower())
+    return name
+
+
+@router.get("/download-all")
+def download_all_resumes(
+    doc_type: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Download every saved resume (or cover letter) for the signed-in user as a
+    single ZIP archive.
+
+    Each entry is a server-rendered PDF, falling back to Word (.docx) when
+    WeasyPrint and its system libraries aren't available — so the archive always
+    contains exactly one document per saved item. Returns 404 when the user has
+    nothing saved, and 501 only if neither renderer can produce a document.
+    """
+    import io
+    import zipfile
+
+    from .export_router import build_pdf_bytes, build_docx_bytes, document_basename
+
+    query = db.query(models.Resume).filter(models.Resume.owner_id == current_user.id)
+    if doc_type:
+        query = query.filter(models.Resume.doc_type == doc_type)
+    rows = query.order_by(models.Resume.updated_at.desc()).all()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="You have no saved documents to download yet.")
+
+    buf = io.BytesIO()
+    used: set = set()
+    included = 0
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for row in rows:
+            content = row.content or {}
+            base = document_basename(content, fallback=row.name or "Resume")
+
+            pdf = build_pdf_bytes(content)
+            if pdf is not None:
+                zf.writestr(_unique_zip_name(base, ".pdf", used), pdf)
+                included += 1
+                continue
+
+            docx = build_docx_bytes(content, db)
+            if docx is not None:
+                zf.writestr(_unique_zip_name(base, ".docx", used), docx)
+                included += 1
+
+    if included == 0:
+        raise HTTPException(
+            status_code=501,
+            detail="Export is unavailable right now — neither the PDF nor the Word renderer is installed on the server.",
+        )
+
+    filename = "cover-letters.zip" if doc_type == "cover_letter" else "resumes.zip"
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("", response_model=schemas.ResumeOut, status_code=201)
