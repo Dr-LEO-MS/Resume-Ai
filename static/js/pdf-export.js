@@ -488,7 +488,6 @@ const PDFExport = (() => {
       URL.revokeObjectURL(url);
       return;
     }
-    const p = resume.personal || {};
     let text = `${p.fullName || 'RESUME'}\n`;
     if (p.title) text += `${p.title.toUpperCase()}\n`;
     text += `${[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).join(' | ')}\n\n`;

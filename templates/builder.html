@@ -6,7 +6,7 @@
   <title>Resume Builder — Resume AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/styles.css?v=20260913-1">
+  <link rel="stylesheet" href="/static/css/styles.css?v=20260916-2">
 </head>
 <body>
   <a href="#main" class="skip-link">Skip to content</a>
@@ -50,12 +50,12 @@
         </button>
 
         <div class="export-dropdown-wrap position-relative">
-          <button class="btn btn-primary btn-sm" id="export-dropdown-toggle">Download ▾</button>
-          <div class="export-dropdown-menu d-none" id="export-dropdown-menu">
-            <button class="dropdown-item" id="export-pdf-btn">📄 Download PDF (300 DPI Print Quality)</button>
-            <button class="dropdown-item" id="export-pdf-fast-btn">🖨️ Print / Standard PDF</button>
-            <button class="dropdown-item" id="export-docx-btn">📝 Download Word (.docx)</button>
-            <button class="dropdown-item" id="export-txt-btn">📃 Download Plain Text (.txt)</button>
+          <button class="btn btn-primary btn-sm" id="export-dropdown-toggle" type="button" aria-haspopup="menu" aria-expanded="false">Download ▾</button>
+          <div class="export-dropdown-menu d-none" id="export-dropdown-menu" role="menu">
+            <button class="dropdown-item" id="export-pdf-btn" type="button">📄 Download PDF (300 DPI Print Quality)</button>
+            <button class="dropdown-item" id="export-pdf-fast-btn" type="button">🖨️ Print / Standard PDF</button>
+            <button class="dropdown-item" id="export-docx-btn" type="button">📝 Download Word (.docx)</button>
+            <button class="dropdown-item" id="export-txt-btn" type="button">📃 Download Plain Text (.txt)</button>
           </div>
         </div>
       </div>
@@ -752,13 +752,13 @@
   <script src="/static/js/jspdf.umd.min.js"></script>
   <script src="/static/js/state.js"></script>
   <script src="/static/js/storage.js"></script>
-  <script src="/static/js/auth.js?v=2"></script>
+  <script src="/static/js/auth.js?v=20260916-2"></script>
   <script src="/static/js/template-engine.js"></script>
   <script src="/static/js/ai-check.js"></script>
   <script src="/static/js/ai-enhance.js"></script>
   <script src="/static/js/ai-chat.js"></script>
-  <script src="/static/js/pdf-export.js"></script>
+  <script src="/static/js/pdf-export.js?v=20260916-3"></script>
   <script src="/static/js/main.js"></script>
-  <script src="/static/js/builder.js?v=20260907-1"></script>
+  <script src="/static/js/builder.js?v=20260916-3"></script>
 </body>
 </html>

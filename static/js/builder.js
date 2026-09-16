@@ -2882,17 +2882,17 @@
   });
 
 
-  document.getElementById('zoom-in-btn').addEventListener('click', () => {
+  document.getElementById('zoom-in-btn')?.addEventListener('click', () => {
     zoom = Math.min(1.4, zoom + 0.1);
     els.zoomLevel.textContent = Math.round(zoom * 100) + '%';
     renderPreview(ResumeState.get());
   });
-  document.getElementById('zoom-out-btn').addEventListener('click', () => {
+  document.getElementById('zoom-out-btn')?.addEventListener('click', () => {
     zoom = Math.max(0.6, zoom - 0.1);
     els.zoomLevel.textContent = Math.round(zoom * 100) + '%';
     renderPreview(ResumeState.get());
   });
-  document.getElementById('fullscreen-preview-btn').addEventListener('click', () => {
+  document.getElementById('fullscreen-preview-btn')?.addEventListener('click', () => {
     ResumeStorage.saveLocal(ResumeState.get());
     window.open('/preview', '_blank');
   });
@@ -2995,12 +2995,31 @@
   // ---- Export Dropdown & Handlers ------------------------------------------
   if (els.exportDropdownToggle && els.exportDropdownMenu) {
     els.exportDropdownToggle.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
+      const willOpen = els.exportDropdownMenu.classList.contains('d-none');
       els.exportDropdownMenu.classList.toggle('d-none');
+      els.exportDropdownToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
     });
 
-    document.addEventListener('click', () => {
+    els.exportDropdownMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    document.addEventListener('click', (ev) => {
+      // Ignore clicks originating INSIDE the export menu (its item handlers
+      // below call stopPropagation, but guard anyway for robustness so the
+      // menu can't be hidden in the same tick the user picks an export).
+      if (ev.target && ev.target.closest && ev.target.closest('#export-dropdown-menu')) return;
       if (els.exportDropdownMenu) els.exportDropdownMenu.classList.add('d-none');
+      if (els.exportDropdownToggle) els.exportDropdownToggle.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && els.exportDropdownMenu) {
+        els.exportDropdownMenu.classList.add('d-none');
+        if (els.exportDropdownToggle) els.exportDropdownToggle.setAttribute('aria-expanded', 'false');
+      }
     });
 
     const exportPdfBtn = document.getElementById('export-pdf-btn');

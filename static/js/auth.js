@@ -159,7 +159,7 @@ const Auth = (() => {
 
   // ---- UI header update ----------------------------------------------------
   function updateHeader() {
-    const actionsEl = document.querySelector('.nav-actions');
+    const actionsEl = document.querySelector('.site-header .nav-actions, .marketing-header .nav-actions');
     if (!actionsEl) return;
 
     let authSlot = actionsEl.querySelector('#header-auth-slot');
