@@ -9,7 +9,7 @@ FROM python:3.12-slim AS base
 # `apt-get upgrade` patches the base image's packaged vulnerabilities.
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
         libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libpangoft2-1.0-0 \
-        libcairo2 libffi-dev libjpeg62-turbo zlib1g zlib1g-dev shared-mime-info \
+        libcairo2 libffi-dev libjpeg-turbo8 zlib1g zlib1g-dev shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
