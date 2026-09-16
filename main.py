@@ -1,25 +1,3 @@
-"""
-main.py
--------------------------------------------------------------------------
-FastAPI application entrypoint.
-
-Run locally:
-    pip install -r requirements.txt
-    uvicorn main:app --reload
-
-Then open http://127.0.0.1:8000
-
-Page routes (index, builder, templates, etc.) render Jinja2 templates from
-/templates. API routes are mounted under /api/* by the routers in /api/routers.
-
-Every page is rendered through render_page() below, which injects `site` —
-the full admin-editable settings dict from settings_service.py — into every
-template's context. That's what lets templates read e.g.
-{{ site.site.site_name }} or {{ site.features.cover_letters_enabled }}
-without each route wiring it up individually, and it's why an admin editing
-Settings takes effect on the live site immediately with no redeploy.
--------------------------------------------------------------------------
-"""
 
 import os
 from contextlib import asynccontextmanager
@@ -67,10 +45,10 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     return response
 
-# CORS — tighten allow_origins to your real domain(s) in production.
+_cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _cors_origins],
     allow_methods=["*"],
     allow_headers=["*"],
 )
