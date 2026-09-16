@@ -50,13 +50,19 @@
         </button>
 
         <div class="export-dropdown-wrap position-relative">
-          <button class="btn btn-primary btn-sm" id="export-dropdown-toggle" type="button" aria-haspopup="menu" aria-expanded="false">Download ▾</button>
+          <button class="btn btn-primary btn-sm" id="export-dropdown-toggle" type="button" aria-haspopup="menu" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
           <div class="export-dropdown-menu d-none" id="export-dropdown-menu" role="menu">
             <button class="dropdown-item" id="export-pdf-btn" type="button">📄 Download PDF (300 DPI Print Quality)</button>
             <button class="dropdown-item" id="export-pdf-fast-btn" type="button">🖨️ Print / Standard PDF</button>
             <button class="dropdown-item" id="export-docx-btn" type="button">📝 Download Word (.docx)</button>
             <button class="dropdown-item" id="export-txt-btn" type="button">📃 Download Plain Text (.txt)</button>
           </div>
+
+        <!-- Mobile-only: User account button with profile pic -->
+        <a href="/dashboard#account" class="mobile-user-btn" id="mobile-user-btn" title="Account">
+          <img src="" alt="Profile" class="mobile-user-avatar" id="mobile-user-avatar" style="display:none;">
+          <span class="mobile-user-initial" id="mobile-user-initial">U</span>
+        </a>
         </div>
       </div>
     </div>
