@@ -25,10 +25,70 @@ if not globals().get("_PY314_UNION_PATCH_APPLIED", False):
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = getenv("DATABASE_URL", "sqlite:///./resumeai.db")
+DATABASE_URL_RAW = getenv("DATABASE_URL", "sqlite:///./resumeai.db")
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+def _normalize_database_url(url: str) -> str:
+    """Make a Postgres DSN safe for SQLAlchemy.
+
+    Passwords with URL-reserved chars (e.g. ``! @ / # : ?`` — very common in
+    Supabase-generated passwords) break URL parsing and crash the app at
+    import time (on Vercel: 500 FUNCTION_INVOCATION_FAILED). Re-quote the
+    password idempotently and ensure ``sslmode=require`` for hosted Postgres.
+    SQLite URLs pass through untouched.
+    """
+    if not url or url.startswith("sqlite"):
+        return url
+    if not url.startswith(("postgresql://", "postgres://", "postgresql+psycopg://")):
+        return url
+    try:
+        from urllib.parse import urlparse, urlunparse, quote, unquote, parse_qsl, urlencode
+
+        # SQLAlchemy accepts ``postgres://`` but canonical form is ``postgresql://``.
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://"):]
+        if url.startswith("postgresql+psycopg://"):
+            scheme = "postgresql+psycopg"
+            rest = url[len("postgresql+psycopg://"):]
+            parsed = urlparse("postgresql://" + rest)
+        else:
+            scheme = "postgresql"
+            parsed = urlparse(url)
+        if "@" not in (parsed.netloc or ""):
+            return url
+        userinfo, _, hostport = parsed.netloc.rpartition("@")
+        if ":" in userinfo:
+            user, _, password = userinfo.partition(":")
+            # Unquote first so an already-encoded password isn't double-encoded.
+            password = quote(unquote(password), safe="")
+            userinfo = f"{user}:{password}"
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        # Supabase / hosted Postgres require SSL; default it on unless set.
+        if "sslmode" not in query and "ssl" not in query:
+            query["sslmode"] = "require"
+        rebuilt = urlunparse((
+            scheme,
+            f"{userinfo}@{hostport}",
+            parsed.path or "/postgres",
+            parsed.params,
+            urlencode(query),
+            parsed.fragment,
+        ))
+        return rebuilt
+    except Exception as _e:  # noqa: BLE001 - never crash import on a bad URL
+        print(f"[database] URL normalize notice: {_e}")
+        return url
+
+
+DATABASE_URL = _normalize_database_url(DATABASE_URL_RAW)
+
+try:
+    connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+    engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
+except Exception as _e:  # noqa: BLE001 - boot with SQLite rather than crash serverless import
+    print(f"[database] engine init failed, falling back to SQLite: {_e}")
+    DATABASE_URL = "sqlite:///./resumeai.db"
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
