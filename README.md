@@ -269,12 +269,13 @@ Interactive Swagger docs are auto-generated at **[`/docs`](http://127.0.0.1:8000
 
 ## ☁️ Deployment Notes
 
-- Point `DATABASE_URL` at a managed Postgres instance — SQLite is fine for local dev but won't survive redeploys on most PaaS platforms.
+- Point `DATABASE_URL` at a managed Postgres instance — SQLite is fine for local dev but won't survive redeploys on serverless platforms like Vercel.
+- **Vercel** is the deployment target: the Python runtime auto-detects FastAPI from `requirements.txt` and routes *every* request to the app (so no `rewrites` are needed — a catch-all rewrite would rewrite the request path). Pin the runtime with `.python-version`, and set `DATABASE_URL`, `JWT_SECRET`, and `CORS_ORIGINS` under Project → Settings → Environment Variables.
 - Set `JWT_SECRET` to a long random value in production — never ship the dev default.
 - Set `APP_BASE_URL` to your live domain so password-reset/plan emails link correctly.
 - Set your chosen AI provider's key (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`) as a secret — never in source control.
 - `weasyprint` needs system libraries (Pango/Cairo) on the host. If that's not available (e.g. some Windows setups), no action needed — PDF export automatically falls back to the browser's print dialog, then client-side raster rendering.
-- Lock down CORS: set `allow_origins` in `main.py` to your production domain before going live.
+- Lock down CORS: set the `CORS_ORIGINS` env var to your production origin(s) (comma-separated, e.g. `https://your-domain.com`) — it defaults to `*` when unset.
 
 <br>
 

@@ -14,9 +14,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-# NOTE: do NOT hardcode PORT here. Render injects its own $PORT at runtime
+# NOTE: do NOT hardcode PORT here. The host injects its own $PORT at runtime
 # (default 10000) and health-checks that port. A fixed 8000 makes the
-# service unreachable on Render -> "deploy failed" even when the build succeeds.
+# service unreachable -> "deploy failed" even when the build succeeds.
 # Build stamp: baked into the image so /api/version reports the exact commit.
 ARG BUILD_SHA=dev
 ENV BUILD_SHA=${BUILD_SHA}
@@ -30,7 +30,7 @@ COPY . .
 RUN mkdir -p static/uploads/avatars static/uploads/photos
 
 EXPOSE 8000
-# NOTE: shell form is deliberate — Render injects $PORT at runtime and the
+# NOTE: shell form is deliberate — the host injects $PORT at runtime and the
 # health check hits $PORT (default 10000). Exec-form CMD with a fixed 8000
 # ignores $PORT, so the service never becomes reachable -> "deploy failed".
 CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}

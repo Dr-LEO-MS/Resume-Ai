@@ -53,6 +53,3 @@ jobs:
           python-version: "3.12"
       - name: Validate vercel.json
         run: python -c "import json; json.load(open('vercel.json')); print('vercel.json OK')"
-      - name: Validate render.yaml
-        run: pip install pyyaml -q; python -c "import yaml; yaml.safe_load(open('render.yaml')); print('render.yaml OK')"
-
