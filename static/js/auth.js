@@ -182,10 +182,18 @@ const Auth = (() => {
       const adminDropdownLink = isAdmin()
         ? '<a href="/admin">⚡ Admin Panel</a>'
         : '';
+      // Small round avatar (uploaded profile pic from the Account page), with
+      // an initial-letter fallback when no photo has been uploaded yet.
+      const displayName = user.full_name || user.email.split('@')[0];
+      const initial = (user.full_name || user.email || 'U').trim().charAt(0).toUpperCase();
+      const avatarHtml = user.profile_picture_url
+        ? `<img class="user-menu-avatar" src="${user.profile_picture_url}" alt="" referrerpolicy="no-referrer">`
+        : `<span class="user-menu-avatar user-menu-avatar-fallback" aria-hidden="true">${initial}</span>`;
       authSlot.innerHTML = `
         <div class="user-menu" style="position:relative;display:inline-block">
-          <button class="btn btn-primary btn-sm user-menu-trigger" aria-expanded="false">
-            ${user.full_name || user.email.split('@')[0]}
+          <button class="btn btn-primary btn-sm user-menu-trigger" aria-expanded="false" aria-label="Open user menu">
+            ${avatarHtml}
+            <span class="user-menu-name">${displayName}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="user-menu-dropdown">

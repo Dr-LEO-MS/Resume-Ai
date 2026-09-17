@@ -610,3 +610,112 @@ def test_download_all_resumes_zip():
 
         # 4. Auth is required.
         assert c.get("/api/resumes/download-all").status_code in (401, 403)
+
+
+def _builder_topbar_css_tier(css: str, start_marker: str, end_marker: str) -> str:
+    """Slices one @media block out of styles.css (string slicing reads better
+    than a regex for a stylesheet this large). Markers are the unique
+    /* builder-topbar-tier-N */ comments so an unrelated same-width @media
+    block (e.g. the pre-existing (max-width: 480px) grid block) can never be
+    picked up by mistake."""
+    tier = css.split(start_marker)[-1]
+    return tier[: tier.index(end_marker)] if end_marker in tier else tier
+
+
+def test_builder_topbar_survives_sub_320px_viewports():
+    """Regression guard for the builder topbar below 320px.
+
+    The bar used to break at narrow widths because the <=860px block set
+    `.builder-header-container { flex-wrap: wrap }`; once the reference row's
+    min-content width exceeded the viewport (~430px) the whole `.nav-actions`
+    cluster fell onto its own flex line, and `.nav-segment-tabs
+    { flex: 1 0 100% }` added a third — a 127px-tall bar at 320px, 141px at
+    240px, 167px at 180px instead of the reference's single 72px row. Fixed
+    widths (title 85px, select, 38px avatar, 30px icon buttons) plus the
+    default `min-width: auto` of flex items then pushed the bar past the
+    viewport edge, creating page-level horizontal scroll below ~230px.
+
+    The fix locks the reference row with a two-line grid (grid tracks cannot
+    wrap) and viewport-relative metrics, so these assertions pin the contract:
+    the bar must stay one row of eight controls above the tab strip, with no
+    wrapping, no clipping of tab labels and no page-level overflow.
+    """
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(root, "static", "css", "styles.css"), encoding="utf-8") as fh:
+        css = fh.read()
+
+    # 1. A hardening tier exists for each narrow breakpoint, down to the
+    #    smallest practical viewport (foldable cover screens).
+    for marker in (
+        "@media (max-width: 480px)",
+        "@media (max-width: 320px)",
+        "@media (max-width: 260px)",
+    ):
+        assert marker in css, f"missing narrow-viewport tier {marker}"
+
+    tier1 = _builder_topbar_css_tier(
+        css, "/* builder-topbar-tier-1 */", "/* builder-topbar-tier-2 */"
+    )
+
+    # 2. The bar is a two-line grid: reference row first, view switcher second.
+    container_rule = tier1.split(".site-header .builder-header-container {")[1].split("}")[0]
+    assert "display: grid" in container_rule
+    assert "grid-template-columns: minmax(0, 1fr) auto" in container_rule
+    assert '"left actions"' in container_rule and '"tabs tabs"' in container_rule
+    # ...and the bar itself must not become a scroll container, otherwise the
+    # Export / user popovers would be clipped by it.
+    assert "overflow" not in container_rule
+
+    for area in ("grid-area: left", "grid-area: actions", "grid-area: tabs"):
+        assert area in tier1
+
+    # 3. Neither cluster may wrap (that is what produced the extra bar lines).
+    assert tier1.count("flex-wrap: nowrap") >= 2
+
+    # 4. Formerly fixed metrics are viewport-relative and the title can shrink
+    #    and elide instead of pushing the row wider than the screen.
+    assert "width: clamp(24px, 17vw, 85px)" in tier1          # was width: 85px
+    assert "font-size: clamp(9px, 2.6vw, 12.8px)" in tier1    # was 12.8px fixed
+    assert "width: clamp(22px, 9vw, 38px)" in tier1           # was the 38px avatar
+    assert "min-width: 0" in tier1
+    assert "text-overflow: ellipsis" in tier1
+    assert "flex-wrap: nowrap" in tier1
+
+    # 5. Tab labels keep their full text: they may grow to share the row but
+    #    never shrink below the label, and the strip scrolls as a fallback.
+    tabs_rule = tier1.split(".nav-segment-tabs .view-tab {")[1].split("}")[0]
+    assert "min-width: max-content" in tabs_rule
+    assert "white-space: nowrap" in tabs_rule
+    tabs_strip_rule = tier1.split(".builder-header-container > .nav-segment-tabs {")[1].split("}")[0]
+    assert "flex-wrap: nowrap" in tabs_strip_rule
+    assert "overflow-x: auto" in tabs_strip_rule
+
+    # 6. Popovers opened from the bar are pinned to the viewport in the
+    #    <=320px tier (where the bar itself scrolls) so they are never clipped
+    #    by the bar and always fit the screen they were opened on.
+    tier2 = _builder_topbar_css_tier(
+        css, "/* builder-topbar-tier-2 */", "/* builder-topbar-tier-3 */"
+    )
+    assert "#autosave-status" in tier1                        # chip stays in-row
+    assert "#autosave-status:hover .autosave-text" in tier1    # hover can't reflow
+    assert "overflow-x: auto" in tier2                      # scroll, never wrap
+    assert "position: fixed" in tier2
+    assert "max-width: none" in tier2
+
+    # 7. The builder page still ships the eight reference controls, in the
+    #    reference order, and pulls the current stylesheet build.
+    with TestClient(main.app) as c:
+        html = c.get("/builder").text
+    order = [
+        'class="logo-mark"',
+        'id="doc-title-input"',
+        'id="lang-select-dropdown"',
+        'id="autosave-status"',
+        'class="nav-actions',
+        'id="import-btn"',
+        'class="theme-toggle icon-btn"',
+        'id="export-dropdown-toggle"',
+    ]
+    positions = [html.index(token) for token in order]
+    assert positions == sorted(positions), "topbar controls changed order"
+    assert "styles.css?v=20260917-1" in html

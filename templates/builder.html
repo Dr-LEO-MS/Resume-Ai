@@ -6,9 +6,10 @@
   <title>Resume Builder — Resume AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/styles.css?v=20260916-2">
+  <link rel="stylesheet" href="/static/css/styles.css?v=20260917-1">
 </head>
 <body>
+  {% include "_loader.html" %}
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <div class="container builder-header-container">
@@ -58,11 +59,6 @@
             <button class="dropdown-item" id="export-txt-btn" type="button">📃 Download Plain Text (.txt)</button>
           </div>
 
-        <!-- Mobile-only: User account button with profile pic -->
-        <a href="/dashboard#account" class="mobile-user-btn" id="mobile-user-btn" title="Account">
-          <img src="" alt="Profile" class="mobile-user-avatar" id="mobile-user-avatar" style="display:none;">
-          <span class="mobile-user-initial" id="mobile-user-initial">U</span>
-        </a>
         </div>
       </div>
     </div>

@@ -43,15 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const burger = document.querySelector('.nav-burger');
-  const navLinks = document.querySelector('.nav-links');
-  if (burger && navLinks) {
-    burger.addEventListener('click', () => {
-      const open = navLinks.classList.toggle('is-open');
-      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  }
-
   initPasswordToggles();
 });
 

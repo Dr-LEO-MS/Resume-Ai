@@ -231,66 +231,6 @@
     importFileInput: document.getElementById('import-file-input'),
     importTextInput: document.getElementById('import-text-input'),
   };
-  // ---- Update mobile user profile button -----------------------------------
-  function updateMobileUserButton() {
-    const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
-    const avatarImg = document.getElementById('mobile-user-avatar');
-    const initialSpan = document.getElementById('mobile-user-initial');
-    
-    if (user) {
-      if (avatarImg && user.profile_picture_url) {
-        avatarImg.src = user.profile_picture_url;
-        avatarImg.style.display = 'block';
-        if (initialSpan) initialSpan.style.display = 'none';
-      } else if (initialSpan) {
-        const name = user.full_name || user.email || 'U';
-        initialSpan.textContent = name.charAt(0).toUpperCase();
-        initialSpan.style.display = 'flex';
-        if (avatarImg) avatarImg.style.display = 'none';
-      }
-    }
-  }
-
-  // ---- Update mobile user profile button -----------------------------------
-  function updateMobileUserButton() {
-    const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
-    const avatarImg = document.getElementById('mobile-user-avatar');
-    const initialSpan = document.getElementById('mobile-user-initial');
-    
-    if (user) {
-      if (avatarImg && user.profile_picture_url) {
-        avatarImg.src = user.profile_picture_url;
-        avatarImg.style.display = 'block';
-        if (initialSpan) initialSpan.style.display = 'none';
-      } else if (initialSpan) {
-        const name = user.full_name || user.email || 'U';
-        initialSpan.textContent = name.charAt(0).toUpperCase();
-        initialSpan.style.display = 'flex';
-        if (avatarImg) avatarImg.style.display = 'none';
-      }
-    }
-  }
-
-  // ---- Update mobile user profile button -----------------------------------
-  function updateMobileUserButton() {
-    const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
-    const avatarImg = document.getElementById('mobile-user-avatar');
-    const initialSpan = document.getElementById('mobile-user-initial');
-    
-    if (user) {
-      if (avatarImg && user.profile_picture_url) {
-        avatarImg.src = user.profile_picture_url;
-        avatarImg.style.display = 'block';
-        if (initialSpan) initialSpan.style.display = 'none';
-      } else if (initialSpan) {
-        const name = user.full_name || user.email || 'U';
-        initialSpan.textContent = name.charAt(0).toUpperCase();
-        initialSpan.style.display = 'flex';
-        if (avatarImg) avatarImg.style.display = 'none';
-      }
-    }
-  }
-
 // ---- Profile photo: shared modal + actions ---------------------------------
   // The "Add Photo" button lives in Edit -> Profile Summary -> Personal Details
   // (renderPersonalFields), but the modal and actions are shared, so they're
@@ -3962,6 +3902,12 @@
   // ---- Init -----------------------------------------------------------------
 
   async function boot() {
+    // Keep the boot splash (templates/_loader.html) up while the requested
+    // resume is hydrated and the form/preview are painted, so the builder never
+    // flashes an empty shell. loader.js force-hides after 15s as a safety net.
+    const bootLoader = window.ResumeAILoader;
+    if (bootLoader) bootLoader.hold('builder-boot');
+
     const params = new URLSearchParams(window.location.search);
     const resumeId = params.get('id');
     const secureToken = params.get('token');
@@ -4010,6 +3956,8 @@
     if (params.get('panel') === 'design') {
       window.__showCustomizeView?.();
     }
+
+    if (bootLoader) bootLoader.release('builder-boot');
   }
   boot();
 })();

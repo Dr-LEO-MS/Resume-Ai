@@ -16,6 +16,7 @@
      13. Footer
      14. Utilities & animations
      15. Responsive breakpoints
+     16. Boot loading screen (splash — templates/_loader.html + static/js/loader.js)
    ========================================================================== */
 
 /* ---------------------------------------------------------------------- */
@@ -430,7 +431,7 @@ html[data-theme='dark'] .toggle-pill button.is-active { background: var(--signal
   color: var(--text);
   display: flex; align-items: center; justify-content: center;
 }
-.nav-burger { display: none; }
+
 
 /* ---------------------------------------------------------------------- */
 /* 7. LANDING PAGE                                                         */
@@ -659,109 +660,6 @@ html[data-theme='dark'] .workflow-step .step-num { color: #a9a9f5; }
   color: var(--text-muted);
 }
 
-/* Mobile user profile button - visible only on mobile */
-.mobile-user-btn {
-  display: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--border);
-  background: var(--bg-raised);
-  padding: 0;
-  flex-shrink: 0;
-}
-.mobile-user-btn img.mobile-user-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.mobile-user-btn .mobile-user-initial {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text);
-}
-@media (max-width: 768px) {
-  .mobile-user-btn {
-    display: inline-flex;
-  }
-}
-
-
-/* Mobile user profile button - visible only on mobile */
-.mobile-user-btn {
-  display: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--border);
-  background: var(--bg-raised);
-  padding: 0;
-  flex-shrink: 0;
-}
-.mobile-user-btn img.mobile-user-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.mobile-user-btn .mobile-user-initial {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text);
-}
-@media (max-width: 768px) {
-  .mobile-user-btn {
-    display: inline-flex;
-  }
-}
-
-
-/* Mobile user profile button - visible only on mobile */
-.mobile-user-btn {
-  display: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--border);
-  background: var(--bg-raised);
-  padding: 0;
-  flex-shrink: 0;
-}
-.mobile-user-btn img.mobile-user-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.mobile-user-btn .mobile-user-initial {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text);
-}
-@media (max-width: 768px) {
-  .mobile-user-btn {
-    display: inline-flex;
-  }
-}
 
 .view-tab:hover { background: var(--bg-recessed); color: var(--text); }
 .view-tab.is-active { background: var(--signal-tint); color: var(--signal-deep); }
@@ -1779,7 +1677,7 @@ html[data-theme='dark'] .filter-chip.is-active { background: var(--signal); bord
 .contact-info-item { display: flex; gap: var(--space-4); margin-bottom: var(--space-5); }
 
 .dashboard-shell { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - var(--header-h)); }
-.dashboard-side { border-right: 1px solid var(--border); padding: var(--space-6); }
+.dashboard-side { border-right: 1px solid var(--border); padding: var(--space-6); position: sticky; top: var(--header-h); align-self: start; z-index: 2; }
 .dashboard-side a { display: block; padding: 0.6em 0.75em; border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--text-muted); margin-bottom: 2px; }
 .dashboard-side a.is-active, .dashboard-side a:hover { background: var(--bg-recessed); color: var(--text); }
 .dashboard-main { padding: var(--space-8); }
@@ -2174,6 +2072,47 @@ html[data-theme='dark'] .auth-error { background: #3a1f1c; color: #f0a99e; borde
 /* ---------------------------------------------------------------------- */
 .user-menu { position: relative; }
 .user-menu-trigger { gap: var(--space-2); }
+/* Round avatar shown inside the header user-menu trigger (mobile-only view) */
+.user-menu-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+  flex-shrink: 0;
+  background: var(--bg-recessed);
+}
+/* Desktop: keep the plain name button (no avatar, no round shape) */
+@media (min-width: 861px) {
+  .user-menu-trigger .user-menu-avatar { display: none; }
+}
+.user-menu-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--signal-tint);
+  color: var(--signal-deep);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+}
+/* Mobile: the trigger collapses to a small round button with just the
+   user's profile picture — no name text, no chevron. */
+@media (max-width: 860px) {
+  .user-menu-trigger {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  .user-menu-trigger .user-menu-avatar { width: 34px; height: 34px; }
+  .user-menu-trigger .user-menu-name,
+  .user-menu-trigger svg { display: none; }
+}
 .user-menu-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -3145,7 +3084,6 @@ html[data-theme='dark'] .btn-floating-ai:focus-visible {
   .hero { grid-template-columns: 1fr; }
   .doc-card { transform: none; max-width: 420px; margin: 0 auto; }
   .nav-links { display: none; }
-  .nav-burger { display: flex; }
   .site-header { height: auto; min-height: var(--header-h); padding: 6px 0; }
   .builder-header-container { flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; padding: 0 var(--space-3); }
   .builder-header-container .nav-left { flex: 1 1 auto; gap: 6px; align-items: center; min-width: 0; }
@@ -3164,7 +3102,7 @@ html[data-theme='dark'] .btn-floating-ai:focus-visible {
   .builder-form, .builder-preview { border-right: none; border-bottom: 1px solid var(--border); }
   .contact-layout { grid-template-columns: 1fr; }
   .dashboard-shell { grid-template-columns: 1fr; }
-  .dashboard-side { display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .dashboard-side { display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
   .auth-container { grid-template-columns: 1fr; }
   .auth-features { display: none; }
   .admin-shell { grid-template-columns: 1fr; }
@@ -5029,6 +4967,382 @@ html[data-theme='dark'] .cl-ai-generated-preview {
     margin-top: 6px;
     margin-left: 0;
   }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 16. BOOT LOADING SCREEN                                                */
+/* ---------------------------------------------------------------------- */
+/* Full-screen splash rendered by templates/_loader.html on every page and
+   dismissed by static/js/loader.js (window.ResumeAILoader). Colours come from
+   the design tokens, but the surface deliberately stays ink-dark in both
+   themes — a branded splash reads better than a flash of empty paper. */
+#resumeai-loader {
+  --ra-bg: var(--ink);
+  --ra-panel: #1a1d29;
+  --ra-panel-edge: var(--line-dark);
+  --ra-ink: var(--paper);
+  --ra-ink-dim: #a7abb9;
+  --ra-gold: var(--amber);
+  --ra-gold-dim: #6b5a35;
+
+  position: fixed;
+  inset: 0;
+  z-index: 9999;                 /* above header, modals and toasts */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ra-bg);
+  font-family: var(--font-body);
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+#resumeai-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* While the splash is up, nothing behind it should scroll. */
+html.ra-is-loading,
+html.ra-is-loading body { overflow: hidden; }
+
+.ra-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+/* --- the document card + the lines being "written" into it --- */
+.ra-doc {
+  width: 88px;
+  height: 112px;
+  border-radius: var(--radius-sm);
+  background: var(--ra-panel);
+  border: 1px solid var(--ra-panel-edge);
+  box-shadow: var(--shadow-lg);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ra-doc .ra-line {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ra-panel-edge);
+  position: relative;
+  overflow: hidden;
+}
+.ra-doc .ra-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ra-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: ra-write 3.2s ease-in-out infinite;
+}
+.ra-doc .ra-line:nth-child(1) { width: 78%; }
+.ra-doc .ra-line:nth-child(2) { width: 92%; }
+.ra-doc .ra-line:nth-child(3) { width: 60%; }
+.ra-doc .ra-line:nth-child(4) { width: 84%; }
+.ra-doc .ra-line:nth-child(1)::after { animation-delay: 0s; }
+.ra-doc .ra-line:nth-child(2)::after { animation-delay: 0.45s; }
+.ra-doc .ra-line:nth-child(3)::after { animation-delay: 0.9s; }
+.ra-doc .ra-line:nth-child(4)::after { animation-delay: 1.35s; }
+
+@keyframes ra-write {
+  0%   { transform: scaleX(0); }
+  28%  { transform: scaleX(1); }
+  72%  { transform: scaleX(1); }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* --- wordmark + rotating status line --- */
+.ra-word { text-align: center; }
+.ra-word .ra-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ra-ink);
+  margin-bottom: 6px;
+}
+.ra-word .ra-status {
+  font-size: var(--text-sm);
+  color: var(--ra-ink-dim);
+  min-height: 16px;
+}
+
+/* --- indeterminate progress bar --- */
+.ra-bar {
+  width: 160px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ra-panel-edge);
+  overflow: hidden;
+}
+.ra-bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--ra-gold-dim), var(--ra-gold));
+  animation: ra-slide 1.6s ease-in-out infinite;
+}
+@keyframes ra-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the splash legible without motion: solid lines + a static bar. */
+  #resumeai-loader .ra-doc .ra-line::after,
+  #resumeai-loader .ra-bar-fill {
+    animation: none !important;
+  }
+  #resumeai-loader .ra-doc .ra-line::after { transform: scaleX(1); opacity: 0.6; }
+  #resumeai-loader .ra-bar-fill { transform: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 15b. BUILDER TOPBAR — NARROW-VIEWPORT HARDENING                        */
+/* ---------------------------------------------------------------------- */
+/* Measured root causes at sub-320px widths (headless Edge, dark theme):
+   1. `.builder-header-container { flex-wrap: wrap }` (<=860px block) let the
+      whole `.nav-actions` cluster drop onto a line of its own as soon as the
+      first line's min-content width exceeded the viewport (~430px). Since
+      `.nav-segment-tabs` was forced to `flex: 1 0 100%`, the bar then became
+      THREE lines: 127px tall at 320px, 141px at 240px, 167px at 180px —
+      instead of the reference's single 72px row.
+   2. Hard pixel metrics — `.doc-title { width: 85px }`, `.lang-dropdown
+      { max-width: 85px }`, `.icon-btn { width: 30px }`, `.user-menu-trigger
+      { width: 38px }` — combined with the default `min-width: auto` of flex
+      items meant the row could not shrink; below ~230px the bar overflowed
+      the document (documentElement.scrollWidth > innerWidth = page-level
+      horizontal scroll caused by the topbar).
+   3. `#autosave-status:hover` grows its padding and reveals the "Saved ..."
+      text, reflowing the row under a pointer; `.nav-segment-tabs
+      { flex-wrap: wrap }` (<=620px) wrapped the four tabs onto extra lines.
+   4. `.builder-header-container { overflow: visible }` (<=1080px) let spilled
+      children paint outside the bar instead of scrolling/clipping.
+
+   The reference is a single line — logo mark, document title, language pill,
+   status chip, Import, theme toggle, download, avatar — on a 72px bar. The
+   rules below lock that line (grid tracks cannot wrap), scale it with vw
+   units/clamp() instead of fixed px, and fall back to sideways scrolling
+   *inside the bar* when a viewport is too narrow for even that. The four
+   view tabs keep their own fixed-height line underneath with content-sized
+   tabs, so they can never squeeze, wrap or distort the reference row. */
+
+/* --- Tier 1: <=480px — reference row on one line, never wrapped ------- */
+/* builder-topbar-tier-1 */
+@media (max-width: 480px) {
+  /* The bar becomes a 2-line grid: [logo … actions] / [tabs]. Grid tracks
+     cannot wrap, so the action cluster can never drop onto a line of its own
+     (that was the 3-line, 127px-tall bar at 320px). Overflow stays visible so
+     the Export / user popovers can still escape the 72px bar. */
+  .site-header .builder-header-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left actions"
+      "tabs tabs";
+    align-items: center;
+    justify-content: normal;
+    column-gap: clamp(4px, 1.4vw, 10px);
+    row-gap: 2px;
+    padding: 0 clamp(5px, 1.8vw, 12px);
+  }
+
+  .builder-header-container > .nav-left {
+    grid-area: left;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: clamp(4px, 2.3vw, 12px);
+    min-width: 0;
+  }
+  .builder-header-container > .nav-actions {
+    grid-area: actions;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: clamp(4px, 2.3vw, 12px);
+    min-width: 0;
+    max-width: none;
+  }
+  /* View switcher: its own line, content-sized tabs, scrolls sideways
+     instead of wrapping to extra lines and inflating the bar. */
+  .builder-header-container > .nav-segment-tabs {
+    grid-area: tabs;
+    order: 0;
+    width: 100%;
+    margin: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .builder-header-container > .nav-segment-tabs::-webkit-scrollbar { display: none; }
+  /* Tabs stay on one line: they grow to share the row but never shrink below
+     their label (min-width: max-content), so a long label can't clip — if the
+     row truly cannot fit, the strip scrolls sideways instead of wrapping. */
+  .nav-segment-tabs .view-tab {
+    flex: 1 1 auto;
+    min-width: max-content;
+    white-space: nowrap;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  /* --- fluid metrics: every former fixed px becomes viewport-relative, so the
+     row keeps the reference's order/proportions instead of overflowing or
+     being clipped. clamp() max = today's desktop/mobile value, min = the
+     legibility/taptarget floor used by the <=320px tier. --- */
+  .builder-header-container .logo-mark {
+    width: clamp(17px, 6vw, 28px);
+    height: clamp(17px, 6vw, 28px);
+    border-radius: clamp(4px, 1.5vw, 7px);
+  }
+  .doc-title {
+    width: clamp(24px, 17vw, 85px);
+    flex: 0 1 auto;
+    min-width: 0;              /* elides instead of pushing the row wider */
+    padding: 2px clamp(2px, 0.8vw, 4px);
+    font-size: clamp(9px, 2.6vw, 12.8px);
+    text-overflow: ellipsis;
+  }
+  .lang-dropdown {
+    flex: 0 0 auto;
+    padding: 1px clamp(2px, 0.7vw, 4px);
+    font-size: clamp(8px, 2.4vw, 11px);
+  }
+  #autosave-status {
+    flex: 0 0 auto;
+    padding: 2px clamp(2px, 0.8vw, 6px);
+    border-radius: 9px;
+  }
+  /* The status chip's "Saved 12:34" hover state must not resize the line. */
+  #autosave-status:hover { padding: 2px clamp(2px, 0.8vw, 6px); }
+  #autosave-status:hover .autosave-text,
+  #autosave-status:hover .autosave-time { display: none; }
+  .autosave-icon { font-size: clamp(10px, 3vw, 13px); }
+  #import-btn {
+    flex: 0 0 auto;
+    padding: 0.42em clamp(4px, 1.6vw, 10px);
+    font-size: clamp(8px, 2.2vw, 11.5px);
+  }
+  .theme-toggle {
+    flex: 0 0 auto;
+    width: clamp(20px, 7vw, 30px);
+    height: clamp(20px, 7vw, 30px);
+  }
+  .theme-toggle svg { width: clamp(10px, 3.4vw, 15px); height: clamp(10px, 3.4vw, 15px); }
+  #export-dropdown-toggle {
+    flex: 0 0 auto;
+    padding: 0.42em clamp(4px, 1.6vw, 10px);
+  }
+  #export-dropdown-toggle svg { width: clamp(10px, 3.4vw, 14px); height: clamp(10px, 3.4vw, 14px); }
+  .user-menu-trigger {
+    flex: 0 0 auto;
+    width: clamp(22px, 9vw, 38px);
+    height: clamp(22px, 9vw, 38px);
+    min-width: clamp(22px, 9vw, 38px);
+  }
+  .user-menu-trigger .user-menu-avatar {
+    width: clamp(18px, 7.6vw, 34px);
+    height: clamp(18px, 7.6vw, 34px);
+  }
+}
+
+/* --- Tier 2: <=320px — condensed reference row ------------------------ */
+/* builder-topbar-tier-2 */
+@media (max-width: 320px) {
+  /* Tier 1 already scales every control with clamp(); this tier only lowers
+     the floors and the inter-item spacing so the same single row still fits
+     when the viewport is narrower than 320px. Order, colours, radii, the 72px
+     bar height and the two-line structure are all unchanged — the reference
+     layout is preserved, just denser. */
+  .site-header .builder-header-container {
+    column-gap: 2px;
+    row-gap: 2px;
+    padding: 0 clamp(3px, 1.2vw, 6px);
+    /* Safety net for <200px viewports: if the row genuinely cannot shrink any
+       further, scroll the bar sideways (scrollbar hidden) instead of wrapping,
+       collapsing or pushing horizontal scroll onto the whole document. */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+  }
+  .site-header .builder-header-container::-webkit-scrollbar { display: none; }
+  .builder-header-container > .nav-left,
+  .builder-header-container > .nav-actions { gap: clamp(2px, 1vw, 4px); }
+  /* Below ~215px the identity cluster reaches its floor: clip it rather than
+     letting it paint over the action cluster. */
+  .builder-header-container > .nav-left { overflow: hidden; }
+
+  .builder-header-container .logo-mark { width: 18px; height: 18px; border-radius: 4px; }
+  .doc-title {
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 1px 3px;
+    font-size: 9px;
+    text-overflow: ellipsis;
+  }
+  .lang-dropdown { padding: 1px 2px; font-size: 8.5px; }
+  #autosave-status { padding: 2px 3px; }
+  .autosave-icon { font-size: 11px; }
+  #import-btn { padding: 0.42em 5px; font-size: 8.5px; }
+  .theme-toggle { width: 21px; height: 21px; }
+  .theme-toggle svg { width: 11px; height: 11px; }
+  #export-dropdown-toggle { padding: 0.42em 6px; }
+  #export-dropdown-toggle svg { width: 11px; height: 11px; }
+  .user-menu-trigger { width: 24px; height: 24px; min-width: 24px; }
+  .user-menu-trigger .user-menu-avatar { width: 20px; height: 20px; }
+
+  .nav-segment-tabs .view-tab { padding: 3px 7px; font-size: 9px; line-height: 1.2; }
+
+  /* The bar now scrolls sideways here, so menus opened from it are detached
+     from that scroll port and pinned to the viewport instead — they cannot be
+     clipped by the bar and always fit the screen they were opened on. */
+  .export-dropdown-menu,
+  .user-menu-dropdown {
+    position: fixed;
+    top: calc(var(--header-h) + 2px);
+    left: 6px;
+    right: 6px;
+    min-width: 0;
+    max-width: none;
+    max-height: calc(100vh - var(--header-h) - 10px);
+    overflow-y: auto;
+  }
+  .export-dropdown-menu .dropdown-item { font-size: 12px; }
+}
+
+/* --- Tier 3: <=260px — smallest practical width (foldable covers) ------ */
+/* builder-topbar-tier-3 */
+@media (max-width: 260px) {
+  .site-header .builder-header-container { padding: 0 3px; }
+  .builder-header-container .logo-mark { width: 16px; height: 16px; border-radius: 4px; }
+  /* Keep a readable slice of the title and let the remaining slack sit before
+     the action cluster, matching the reference's gap between the two groups. */
+  .doc-title { width: 34px; flex: 0 1 auto; min-width: 0; padding: 1px 2px; font-size: 8.5px; }
+  .lang-dropdown { padding: 1px; font-size: 8px; }
+  #import-btn { padding: 0.4em 4px; font-size: 8px; }
+  .theme-toggle { width: 20px; height: 20px; }
+  .theme-toggle svg { width: 10px; height: 10px; }
+  #export-dropdown-toggle { padding: 0.4em 5px; }
+  #export-dropdown-toggle svg { width: 10px; height: 10px; }
+  .user-menu-trigger { width: 22px; height: 22px; min-width: 22px; }
+  .user-menu-trigger .user-menu-avatar { width: 18px; height: 18px; }
+  .nav-segment-tabs .view-tab { padding: 2px 5px; font-size: 8px; }
+}
+
+@media print {
+  /* A print job started mid-boot (or a browser print fallback) must never
+     capture the splash instead of the page. */
+  #resumeai-loader { display: none !important; }
 }
 
 

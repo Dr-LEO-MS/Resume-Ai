@@ -1,0 +1,32 @@
+{# ---------------------------------------------------------------------------
+   Boot loading screen (splash).
+
+   Included as the first element inside <body> on every page, so the overlay
+   covers the app from the very first paint: see the {% include "_loader.html" %}
+   line right after the opening <body> tag in each page template.
+
+   Styles: static/css/styles.css  -> "BOOT LOADING SCREEN"
+   Logic:  static/js/loader.js    -> window.ResumeAILoader (hold / release / hide)
+
+   Async pages keep it up while they hydrate, e.g.
+       ResumeAILoader.hold('dashboard-boot');   // ... ResumeAILoader.release(...)
+   --------------------------------------------------------------------------- #}
+<div id="resumeai-loader" role="status" aria-live="polite">
+  <div class="ra-stage">
+    <div class="ra-doc" aria-hidden="true">
+      <div class="ra-line"></div>
+      <div class="ra-line"></div>
+      <div class="ra-line"></div>
+      <div class="ra-line"></div>
+    </div>
+    <div class="ra-word">
+      <p class="ra-name">{{ site.branding.logo_text if site else 'Resume AI' }}</p>
+      <p class="ra-status" id="ra-status-text">Formatting your experience…</p>
+    </div>
+    <div class="ra-bar" aria-hidden="true"><div class="ra-bar-fill"></div></div>
+  </div>
+</div>
+<!-- Loaded synchronously (not deferred) so window.ResumeAILoader exists before
+     the page's own scripts run — the builder/dashboard call hold() at boot.
+     onerror is a last-resort fallback: never strand the user on the splash. -->
+<script src="/static/js/loader.js?v=1.0" onerror="document.getElementById('resumeai-loader').style.display='none'"></script>
