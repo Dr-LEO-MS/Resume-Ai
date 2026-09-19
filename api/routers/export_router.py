@@ -19,6 +19,7 @@ adds that kind of watermark in the first place.
 -------------------------------------------------------------------------
 """
 
+import base64
 import io
 import re
 import uuid
@@ -26,7 +27,7 @@ from html import escape as esc
 from pathlib import Path
 from typing import Any, cast
 
-from fastapi import APIRouter, HTTPException, Response, Depends
+from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import Session
 
 from .. import schemas, models, settings_service
@@ -35,7 +36,9 @@ from ..template_service import get_by_id as get_template
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
-STYLES_CSS_PATH = Path(__file__).resolve().parent.parent.parent / "static" / "css" / "styles.css"
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+STYLES_CSS_PATH = _PROJECT_ROOT / "static" / "css" / "styles.css"
+STATIC_DIR = _PROJECT_ROOT / "static"
 
 
 # ---------------------------------------------------------------------------
@@ -163,6 +166,37 @@ def _render_photo(customization: dict | None) -> str:
         return ""
     shape_class = "doc-photo-square" if photo.get("shape") == "square" else "doc-photo-circle"
     return f'<img class="doc-photo {shape_class}" src="{esc(photo["url"])}" alt="Profile photo">'
+
+
+def _inline_local_images(html: str) -> str:
+    """Rewrite <img src="/static/..."> to data: URLs using local file bytes.
+
+    WeasyPrint renders render_html()'s output from an in-memory string with no
+    base URL, so root-relative photo paths (what /api/upload/photo returns)
+    can never resolve there. This swaps each local <img> for an equivalent
+    data: URL; data: and http(s) sources pass through untouched, and a missing
+    file degrades to the original src rather than breaking the whole PDF.
+    Runs on markup only — never on user text — so quote styles vary safely.
+    """
+    import mimetypes
+
+    def _replace(match):
+        quote, src = match.group(1), match.group(2)
+        data = None
+        rel = _static_relative_path(src)
+        if rel is not None:
+            data = _read_local_static_image(rel)
+        if not data:
+            return match.group(0)
+        mime = mimetypes.guess_type(str(rel))[0] or "image/jpeg"
+        b64 = base64.b64encode(data).decode("ascii")
+        return f"src={quote}data:{mime};base64,{b64}{quote}"
+
+    return re.sub(
+        r"""src=(["'])(/static/[^"']+)\1""",
+        _replace,
+        html or "",
+    )
 
 
 def _render_page_number(customization: dict | None) -> str:
@@ -549,6 +583,22 @@ def render_html(resume: dict) -> str:
     (avoids any relative-path/base_url ambiguity) and real CSS Paged Media
     page numbers if the user enabled them in /customize.
 
+    NOTE on images — two paths, no exceptions:
+      * the builder uploads to /api/upload/photo whose JSON response is a
+        *public* URL ("/static/uploads/photos/xxx.jpg"), and _render_photo()
+        embeds it verbatim as the <img src>. When WeasyPrint later parses that
+        <img>, a relative or root-relative src has no host to resolve against
+        (the HTML is rendered from an in-memory string, not a page load), so
+        the image step must inline the bytes first — that is exactly what
+        _inline_local_images() below does, right before the CSS is attached.
+      * paste-from-URL / crop-modal photos arrive as data: URLs and need no
+        rewriting at all.
+    WeasyPrint has no fetch context here by design; every image the PDF must
+    show has to be either a data: URL or rewritten below. Never "fix" this by
+    handing WeasyPrint a base_url pointing at the live site — on serverless
+    the function cannot HTTP back into itself, and the PDF would come out
+    photo-less again.
+
     Page sizing: explicitly set to A4 (210mm x 297mm) with sensible margins
     via @page, and .resume-doc's normal 560px/max-width cap is overridden to
     fill the full printable width. Without this, WeasyPrint's default page
@@ -604,6 +654,15 @@ def render_html(resume: dict) -> str:
     """
 
     body = render_resume_body(resume)
+
+    # Inline any server-stored photo bytes as data: URLs BEFORE the document
+    # is handed to WeasyPrint. A bare "/static/uploads/..." src renders fine
+    # in the browser (it shares the page's origin) but means nothing to a
+    # from-string HTML renderer with no base URL — without this step every
+    # upload-based photo silently vanishes from the PDF (and only from the
+    # PDF, which is exactly why the preview looks right and the file doesn't).
+    body = _inline_local_images(body)
+
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>{css}\n{page_css}</style></head>
 <body>{body}</body></html>"""
@@ -717,6 +776,194 @@ def _first_font_name(font_family: str, fallback: str = "Calibri") -> str:
     return first or fallback
 
 
+# ---------------------------------------------------------------------------
+# Profile-photo embedding for .docx
+#
+# python-docx can only embed *bytes* — it has no idea what a CSS `src` is. The
+# builder stores the photo as `customization.photo.url`, which is either
+#   (a) a `data:image/...;base64,` URL (the normal case: the crop modal hands
+#       back a canvas.toDataURL() string), or
+#   (b) an http(s) URL the user pasted in the "From URL" tab.
+# Both have to be resolved to bytes before Word can show them.
+# ---------------------------------------------------------------------------
+MAX_PHOTO_BYTES = 5 * 1024 * 1024          # 5 MB — refuse anything larger
+PHOTO_FETCH_TIMEOUT_SEC = 6
+_PHOTO_DISPLAY_PX = 96                     # matches .doc-photo width in styles.css
+
+
+def _static_relative_path(url: str):
+    """Map an app-served path back to a file under the local static dir.
+
+    /api/upload/photo hands the browser paths like
+    "/static/uploads/photos/<id>-<rand>.jpg"; server-side a <img> src is not
+    fetchable (urllib cannot reach the app itself on serverless), so translate
+    the public "/static/..." prefix back to a filesystem path. Absolute
+    http(s) URLs, data: URLs, and anything outside /static/ return None.
+    """
+    u = (url or "").strip()
+    if not u.startswith("/static/"):
+        return None
+    rel = u[len("/static/"):]
+    # Reject traversal even before joining: only plain relative segments.
+    parts = [seg for seg in rel.split("/") if seg not in ("", ".", "..")]
+    if not parts or "/".join(parts) != rel.strip("/"):
+        return None
+    candidate = (STATIC_DIR / "/".join(parts)).resolve()
+    try:
+        candidate.relative_to(STATIC_DIR.resolve())
+    except ValueError:
+        return None
+    return candidate
+
+
+def _read_local_static_image(path) -> bytes | None:
+    """Read a static-dir image file with the same size guard as remote fetch."""
+    try:
+        if not path.is_file():
+            return None
+        size = path.stat().st_size
+        if not size or size > MAX_PHOTO_BYTES:
+            return None
+        data = path.read_bytes()
+    except OSError:
+        return None
+    if len(data) > MAX_PHOTO_BYTES or not data:
+        return None
+    return data
+
+
+def _decode_data_url(url: str):
+    """Return (bytes, mime) for a data: URL, or None when it isn't one."""
+    match = re.match(r"^data:(image/[A-Za-z0-9.+-]+)\s*;\s*base64\s*,(.*)$", url or "", re.DOTALL)
+    if not match:
+        return None
+    try:
+        return base64.b64decode(match.group(2), validate=False), match.group(1)
+    except (ValueError, TypeError):
+        return None
+
+
+def _fetch_remote_image(url: str):
+    """Fetch an http(s) image with a hard size cap and short timeout.
+
+    Uses urllib so the export path stays dependency-free on serverless. Any
+    failure returns None — a missing photo must never break the whole export.
+    """
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError, HTTPError
+
+    if not re.match(r"^https?://", url or "", re.IGNORECASE):
+        return None
+    try:
+        req = Request(url, headers={"User-Agent": "ResumeAI/1.0 (docx export)"})
+        with urlopen(req, timeout=PHOTO_FETCH_TIMEOUT_SEC) as resp:  # noqa: S310 - scheme checked above
+            mime = (resp.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            if mime and not mime.startswith("image/"):
+                return None
+            clen = int(resp.headers.get("Content-Length") or 0)
+            if clen and clen > MAX_PHOTO_BYTES:
+                return None
+            data = resp.read(MAX_PHOTO_BYTES + 1)
+        if len(data) > MAX_PHOTO_BYTES or not data:
+            return None
+        return data, (mime or "image/png")
+    except (URLError, HTTPError, ValueError, OSError, TimeoutError):
+        return None
+
+
+def _circularize_image(raw: bytes) -> bytes:
+    """Pre-process a photo into a transparent-cornered circular PNG.
+
+    Word can't clip a picture to a shape via python-docx, so the circle is
+    baked into the pixels instead: centre-crop to a square, apply a 4x
+    supersampled anti-aliased ellipse mask, and flatten onto transparency.
+    Over Word's white page this renders as a clean round avatar.
+    """
+    from PIL import Image, ImageDraw
+
+    try:
+        resample = Image.Resampling.LANCZOS
+    except AttributeError:
+        resample = getattr(Image, "LANCZOS", 1)
+
+    img = Image.open(io.BytesIO(raw)).convert("RGBA")
+    w, h = img.size
+    side = min(w, h)
+    img = img.crop(((w - side) // 2, (h - side) // 2, (w - side) // 2 + side, (h - side) // 2 + side))
+
+    ss = 4  # supersample factor for a smooth edge
+    mask = Image.new("L", (side * ss, side * ss), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, side * ss - 1, side * ss - 1), fill=255)
+    mask = mask.resize((side, side), resample)
+
+    out = Image.new("RGBA", (side, side), (255, 255, 255, 0))
+    out.paste(img, (0, 0), mask)
+    buf = io.BytesIO()
+    out.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def _load_photo_stream(customization: dict):
+    """Resolve customization.photo into a (BytesIO, shape) pair ready for add_picture.
+
+    Returns (None, None) when there is no usable photo, so callers can just
+    skip the picture and carry on with a text-only header.
+    """
+    photo = (customization or {}).get("photo") or {}
+    if not photo.get("visible") or not photo.get("url"):
+        return None, None
+    shape = "square" if photo.get("shape") == "square" else "circle"
+
+    url = (photo["url"] or "").strip()
+    decoded = _decode_data_url(url)
+    raw = decoded[0] if decoded else None
+    if raw is None:
+        # A server-stored upload is returned to the browser as an app-relative
+        # path (e.g. "/static/uploads/photos/xxx.jpg"). urllib cannot fetch
+        # those, so resolve them against the local static dir. data: URLs and
+        # http(s) URLs are handled by the other two branches.
+        rel = _static_relative_path(url)
+        if rel is not None:
+            raw = _read_local_static_image(rel)
+        if raw is None:
+            fetched = _fetch_remote_image(url)
+            raw = fetched[0] if fetched else None
+    if not raw:
+        return None, None
+
+    if shape == "circle":
+        try:
+            raw = _circularize_image(raw)
+        except Exception as exc:  # noqa: BLE001 - unsupported format -> fall back to as-is
+            print(f"[docx] circular crop failed, embedding original photo: {exc}")
+
+    return io.BytesIO(raw), shape
+
+
+def _make_borderless_table(doc, cols: int, widths_mm):
+    """A 1-row table with all borders suppressed — used to lay the header out
+    side-by-side so the DOCX mirrors .doc-header-photo-{left|right}."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.shared import Mm, Pt
+
+    table = doc.add_table(rows=1, cols=cols)
+    table.autofit = False
+    for cell, width in zip(table.rows[0].cells, widths_mm):
+        cell.width = Mm(width)
+        cell.paragraphs[0].paragraph_format.space_after = Pt(0)
+    # strip borders (python-docx has no Table.borders API)
+    tbl_pr = table._tbl.tblPr
+    borders = OxmlElement("w:tblBorders")
+    for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        el = OxmlElement(f"w:{edge}")
+        el.set(qn("w:val"), "none")
+        el.set(qn("w:sz"), "0")
+        borders.append(el)
+    tbl_pr.append(borders)
+    return table
+
+
 @router.post("/docx")
 def export_docx(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
     features = settings_service.get_group(db, "features", redact=False)
@@ -726,6 +973,7 @@ def export_docx(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
         from docx import Document
         from docx.shared import Pt, Mm
         from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.enum.table import WD_ALIGN_VERTICAL
         from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
     except ImportError:
@@ -740,8 +988,12 @@ def export_docx(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
 
     template = get_template(resume.get("template", "classic")) or {}
     style = template.get("style") or {}
-    theme_primary = style.get("primary_color", "#1e293b")
-    theme_font_stack = style.get("font_family", "Georgia, serif")
+    # Templates have not all used the same key casing over time: most declare
+    # snake_case (primary_color / font_family) but obsidian-style entries use
+    # camelCase (primaryColor / fontFamily). Accept both so no template ever
+    # silently falls back to the default colour/font in Word output.
+    theme_primary = style.get("primary_color") or style.get("primaryColor") or "#1e293b"
+    theme_font_stack = style.get("font_family") or style.get("fontFamily") or "Georgia, serif"
 
     heading_font = _first_font_name(fonts.get("heading") or theme_font_stack)
     body_font = _first_font_name(fonts.get("body") or "Calibri")
@@ -810,24 +1062,63 @@ def export_docx(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
         p_pr.append(border)
         return para
 
-    # ---- Header: name / title / contact ----
-    name_para = doc.add_paragraph()
-    add_heading_run(name_para, p.get("fullName") or "Your Name", name_size, heading_color)
-    if p.get("title"):
-        title_para = doc.add_paragraph()
-        run = title_para.add_run(p["title"])
-        run.font.size = Pt((font_sizes.get("contact") or 11))
-        run.font.color.rgb = body_color
-        run.font.name = body_font
+    # ---- Header: name / title / contact, with the profile photo beside it ----
+    #
+    # python-docx cannot embed a CSS `src`, so customization.photo.url is
+    # resolved to real image bytes by _load_photo_stream() and inserted with
+    # add_picture(). When a photo is visible the text block moves into a
+    # borderless 2-column table so it sits next to the picture, mirroring
+    # .doc-header-photo-{left|right} in the HTML preview and the PDF export.
+    # (These helpers used to be defined but never called, which is why every
+    # download came out text-only.)
     contact = " | ".join(filter(None, [p.get("email"), p.get("phone"), p.get("location")] + [
         _short_link(p.get(k) or "") for k in ("linkedin", "github", "website") if (p.get(k) or "").strip()
     ]))
-    if contact:
-        c_para = doc.add_paragraph()
-        run = c_para.add_run(contact)
-        run.font.size = Pt((font_sizes.get("contact") or 9.5))
-        run.font.color.rgb = body_color
-        run.font.name = body_font
+
+    def add_header_block(container):
+        """Writes name / title / contact into `doc` or into a table cell."""
+        existing = getattr(container, "paragraphs", None) or []
+        # A freshly added cell already owns one empty paragraph — reuse it so
+        # the header doesn't start with a blank line.
+        name_para = existing[0] if existing else container.add_paragraph()
+        name_para.paragraph_format.space_after = Pt(2)
+        add_heading_run(name_para, p.get("fullName") or "Your Name", name_size, heading_color)
+        if p.get("title"):
+            title_para = container.add_paragraph()
+            title_para.paragraph_format.space_after = Pt(2)
+            run = title_para.add_run(p["title"])
+            run.font.size = Pt((font_sizes.get("contact") or 11))
+            run.font.color.rgb = body_color
+            run.font.name = body_font
+        if contact:
+            c_para = container.add_paragraph()
+            c_para.paragraph_format.space_after = Pt(0)
+            run = c_para.add_run(contact)
+            run.font.size = Pt((font_sizes.get("contact") or 9.5))
+            run.font.color.rgb = body_color
+            run.font.name = body_font
+        return container
+
+    photo_stream, photo_shape = _load_photo_stream(customization)
+    photo_position = (customization.get("photo") or {}).get("position", "left") or "left"
+    photo_on_left = photo_position != "right"
+
+    if photo_stream is not None:
+        photo_mm = _PHOTO_DISPLAY_PX * 25.4 / 96.0  # 96px @96dpi -> ~25.4mm
+        text_mm = max(60.0, 178.0 - photo_mm)       # A4 width (210mm) - 16mm margins
+        widths = (photo_mm, text_mm) if photo_on_left else (text_mm, photo_mm)
+        table = _make_borderless_table(doc, 2, widths)
+        cells = table.rows[0].cells
+        photo_cell, text_cell = (cells[0], cells[1]) if photo_on_left else (cells[1], cells[0])
+        for cell in cells:
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        pic_para = photo_cell.paragraphs[0]
+        pic_para.alignment = WD_ALIGN_PARAGRAPH.LEFT if photo_on_left else WD_ALIGN_PARAGRAPH.RIGHT
+        pic_para.paragraph_format.space_after = Pt(0)
+        pic_para.add_run().add_picture(photo_stream, width=Mm(photo_mm))
+        add_header_block(text_cell)
+    else:
+        add_header_block(doc)
 
     is_cover_letter = resume.get("docType") == "cover_letter" or resume.get("doc_type") == "cover_letter"
 

@@ -3923,15 +3923,24 @@
       } catch (err) {
         console.error('Could not load resume via encrypted token:', err);
       }
-    } else if (loggedIn && resumeId) {
+    } else if (loggedIn) {
+      // Server sync must be enabled for EVERY signed-in builder session — not
+      // only when the URL carries ?id=. This call used to live inside the
+      // `loggedIn && resumeId` branch, so a brand-new resume (dashboard's
+      // "+ New resume" → /builder, no ?id=) left SYNC_MODE at 'local':
+      // ResumeStorage.autosave() then skipped the server branch entirely, yet
+      // still returned success, so the UI showed "✓ Saved" while nothing ever
+      // reached the database and the dashboard stayed empty.
       ResumeStorage.setSyncMode('server');
-      try {
-        const found = await ResumeStorage.loadOneFromServer(resumeId, Auth.getToken());
-        if (found) {
-          ResumeState.replace({ ...found.content, id: found.id, template: found.template, docType: found.doc_type });
+      if (resumeId) {
+        try {
+          const found = await ResumeStorage.loadOneFromServer(resumeId, Auth.getToken());
+          if (found) {
+            ResumeState.replace({ ...found.content, id: found.id, template: found.template, docType: found.doc_type });
+          }
+        } catch (err) {
+          console.error('Could not load the requested resume, showing local draft instead:', err);
         }
-      } catch (err) {
-        console.error('Could not load the requested resume, showing local draft instead:', err);
       }
     }
 
