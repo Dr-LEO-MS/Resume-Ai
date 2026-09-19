@@ -719,3 +719,41 @@ def test_builder_topbar_survives_sub_320px_viewports():
     positions = [html.index(token) for token in order]
     assert positions == sorted(positions), "topbar controls changed order"
     assert "styles.css?v=20260917-1" in html
+
+
+def test_links_section_export_and_discovery():
+    """Verify that the Links section renders in HTML/PDF/DOCX exports and AI link checker."""
+    from api.ai_tools import check_links
+    from api.ai_service import _mock_parse_resume_text
+
+    resume_with_links = {
+        **sample_resume,
+        "sectionOrder": ["summary", "experience", "education", "skills", "links"],
+        "links": [
+            {"id": "l1", "label": "LinkedIn : @subhash-leo", "link": "https://in.linkedin.com/in/subhash-leo"},
+            {"id": "l2", "label": "Portfolio", "link": "https://subhash.dev"},
+        ],
+    }
+
+    with TestClient(main.app) as c:
+        # 1. DOCX export contains links
+        docx_res = c.post("/api/export/docx", json={"resume": resume_with_links})
+        assert docx_res.status_code == 200
+        assert len(docx_res.content) > 1000
+
+        # 2. Template rendering includes links
+        for tpl in ("classic", "modern", "minimal", "bold", "executive", "obsidian", "zen"):
+            r = c.post(f"/api/templates/{tpl}/render", json={"resume": {**resume_with_links, "template": tpl}})
+            assert r.status_code == 200
+            html = r.json()["html"]
+            assert "LinkedIn : @subhash-leo" in html or "https://in.linkedin.com/in/subhash-leo" in html or "subhash-leo" in html
+
+        # 3. AI link checking detects links in resume.links
+        link_analysis = check_links(resume_with_links)
+        assert any("subhash" in l.get("url", "") or "subhash" in l.get("display", "") for l in link_analysis["links"])
+
+        # 4. Mock parser returns links array
+        parsed = _mock_parse_resume_text("Some random text")
+        assert "links" in parsed
+        assert isinstance(parsed["links"], list)
+

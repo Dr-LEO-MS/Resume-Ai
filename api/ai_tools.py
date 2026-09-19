@@ -162,6 +162,17 @@ def check_links(resume: Dict[str, Any]) -> Dict[str, Any]:
                 _issue(f"projects[{i}].link", "Project link", "too_long",
                        "Project URL is long - prefer the repo root or a short demo domain.")
 
+    for i, lk in enumerate(resume.get("links") or []):
+        url = (lk.get("link") or lk.get("url") or "").strip()
+        label = lk.get("label") or lk.get("name") or f"Link {i + 1}"
+        if url:
+            links.append({"field": f"links[{i}].link",
+                          "label": label,
+                          "url": url, "display": short_link_label(url)})
+            if len(url.replace("https://", "")) > 60:
+                _issue(f"links[{i}].link", label, "too_long",
+                       "URL is long - prefer a concise domain or custom link label.")
+
     return {"links": links, "issues": issues}
 
 

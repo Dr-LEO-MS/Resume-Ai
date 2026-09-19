@@ -444,6 +444,12 @@ const PDFExport = (() => {
       } else if (sec === 'languages' && resume.languages && resume.languages.length) {
         text += `LANGUAGES\n----------------------------------------\n`;
         text += `${resume.languages.map(l => `${l.name} (${l.level})`).join(', ')}\n\n`;
+      } else if (sec === 'links' && resume.links && resume.links.length) {
+        text += `LINKS\n----------------------------------------\n`;
+        resume.links.forEach(l => {
+          text += `${l.label || ''}${l.link ? ' - ' + l.link : ''}\n`;
+        });
+        text += `\n`;
       }
     });
 
@@ -542,6 +548,12 @@ const PDFExport = (() => {
       } else if (sec === 'languages' && resume.languages && resume.languages.length) {
         text += `LANGUAGES\n${'-'.repeat(30)}\n`;
         text += `${resume.languages.map(l => `${l.name} (${l.level})`).join(', ')}\n\n`;
+      } else if (sec === 'links' && resume.links && resume.links.length) {
+        text += `LINKS\n${'-'.repeat(30)}\n`;
+        resume.links.forEach(l => {
+          text += `${l.label || ''}${l.link ? ' - ' + l.link : ''}\n`;
+        });
+        text += `\n`;
       }
     });
 

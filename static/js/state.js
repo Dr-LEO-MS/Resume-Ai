@@ -66,6 +66,9 @@ const ResumeState = (() => {
     languages: [
       // { id, name, level }
     ],
+    links: [
+      // { id, label, link }
+    ],
     sectionTitles: {},            // { [sectionId]: 'Custom Title' }
     // Per-resume appearance overrides. Every new template initializes these
     // from its meta.json `style` block (see template-engine.js applyTemplateDefaults);
@@ -188,6 +191,11 @@ const ResumeState = (() => {
         id: l.id || uid(),
         name: l.name || '',
         level: l.level || 'Professional',
+      })) : [],
+      links: Array.isArray(data.links) ? data.links.map(l => ({
+        id: l.id || uid(),
+        label: l.label || l.name || '',
+        link: l.link || l.url || '',
       })) : [],
       sectionTitles: (data.sectionTitles && typeof data.sectionTitles === 'object') ? { ...data.sectionTitles } : {},
       customization: normalizeCustomization(data.customization),
@@ -554,6 +562,7 @@ const ResumeState = (() => {
       projects: 0,
       certifications: 0,
       languages: 0,
+      links: 0,
     };
 
     sectionProgress.personal = Math.min(100, Math.round((personalCount / 5) * 100));
@@ -632,6 +641,7 @@ const ResumeState = (() => {
     sectionProgress.projects = (resume.projects && resume.projects.length > 0) ? 100 : 0;
     sectionProgress.certifications = (resume.certifications && resume.certifications.length > 0) ? 100 : 0;
     sectionProgress.languages = (resume.languages && resume.languages.length > 0) ? 100 : 0;
+    sectionProgress.links = (resume.links && resume.links.length > 0) ? 100 : 0;
 
     // Overall Completion Rate Calculation
     const activeSections = resume.sectionOrder.filter(s => !resume.hiddenSections.includes(s));
@@ -647,6 +657,7 @@ const ResumeState = (() => {
       projects: 10,
       certifications: 10,
       languages: 5,
+      links: 5,
     };
 
     activeSections.forEach(sec => {

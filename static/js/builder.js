@@ -18,6 +18,7 @@
     projects: 'Projects',
     certifications: 'Licenses & Certifications',
     languages: 'Languages',
+    links: 'Links',
     custom_section: 'Custom Section',
     training: 'Professional Training',
     additional_experience: 'Additional Experience',
@@ -41,6 +42,7 @@
     projects: 'Highlight personal or professional projects, achievements, and repositories.',
     certifications: 'List professional certifications, licenses, or credentials.',
     languages: 'List languages you speak and your level of proficiency.',
+    links: 'You can add links to websites you want hiring managers to see! Perhaps It will be a link to your portfolio, LinkedIn profile, or personal website',
     custom_section: 'Add a custom section with your own title and content.',
     training: 'Highlight professional training courses, workshops, and seminars.',
     additional_experience: 'List military, freelance, contract, or other additional experience.',
@@ -57,6 +59,7 @@
 
   const ADD_SECTION_OPTIONS = [
     { id: 'custom_section', label: 'Custom Section', icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>`, locked: false },
+    { id: 'links', label: 'Links', icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`, locked: false },
     { id: 'training', label: 'Professional Training', icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`, locked: false },
     { id: 'additional_experience', label: 'Additional Experience', icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`, locked: false },
     { id: 'volunteering', label: 'Volunteering', icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A4.5 4.5 0 0 0 14.5 4c-1.25 0-2.42.52-3.26 1.35L10 6.55 8.76 5.35A4.5 4.5 0 0 0 1.5 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>`, locked: true },
@@ -128,6 +131,7 @@
     if (secId === 'projects') return Array.isArray(resume.projects) ? resume.projects : [];
     if (secId === 'certifications') return Array.isArray(resume.certifications) ? resume.certifications : [];
     if (secId === 'languages') return Array.isArray(resume.languages) ? resume.languages : [];
+    if (secId === 'links') return Array.isArray(resume.links) ? resume.links : [];
     if (secId === 'references') return Array.isArray(resume.references) ? resume.references : [];
     if (secId.startsWith('custom_section') || secId.startsWith('custom_')) {
       const sec = resume[secId];
@@ -1242,6 +1246,182 @@
     ResumeState.reorderSections(newOrder);
   });
 
+  // ---- Month & Year Date Picker Popover Component ---------------------------
+  const DatePicker = (() => {
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+    let activePopover = null;
+    let activeInput = null;
+
+    function parseDate(val) {
+      if (!val) return { monthIdx: null, year: new Date().getFullYear() };
+      const str = String(val).trim();
+      let year = new Date().getFullYear();
+      let monthIdx = null;
+
+      const yrMatch = str.match(/\b(19\d\d|20\d\d)\b/);
+      if (yrMatch) {
+        year = parseInt(yrMatch[1], 10);
+      }
+
+      const lower = str.toLowerCase();
+      const monthMap = {
+        jan: 0, january: 0,
+        feb: 1, february: 1,
+        mar: 2, march: 2,
+        apr: 3, april: 3,
+        may: 4,
+        jun: 5, june: 5,
+        jul: 6, july: 6,
+        aug: 7, august: 7,
+        sep: 8, sept: 8, september: 8,
+        oct: 9, october: 9,
+        nov: 10, november: 10,
+        dec: 11, december: 11,
+      };
+
+      for (const [key, idx] of Object.entries(monthMap)) {
+        if (lower.includes(key)) {
+          monthIdx = idx;
+          break;
+        }
+      }
+
+      if (monthIdx === null) {
+        const numMatch = str.match(/^(\d{1,2})[\/\-\.]/);
+        if (numMatch) {
+          const mNum = parseInt(numMatch[1], 10);
+          if (mNum >= 1 && mNum <= 12) monthIdx = mNum - 1;
+        }
+      }
+
+      return { monthIdx, year };
+    }
+
+    function destroyPopover() {
+      if (activePopover) {
+        activePopover.remove();
+        activePopover = null;
+      }
+      if (activeInput) {
+        activeInput.classList.remove('is-picker-open');
+        activeInput = null;
+      }
+      document.removeEventListener('click', handleOutsideClick, true);
+      window.removeEventListener('resize', positionPopover);
+      window.removeEventListener('scroll', positionPopover, true);
+    }
+
+    function handleOutsideClick(e) {
+      if (!activePopover || !activeInput) return;
+      if (activePopover.contains(e.target) || activeInput.contains(e.target)) return;
+      destroyPopover();
+    }
+
+    function positionPopover() {
+      if (!activePopover || !activeInput) return;
+      const rect = activeInput.getBoundingClientRect();
+      const popoverWidth = 260;
+      const popoverHeight = 220;
+
+      let left = rect.left;
+      if (left + popoverWidth > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - popoverWidth - 12);
+      }
+
+      let top = rect.bottom + 6;
+      if (top + popoverHeight > window.innerHeight - 12) {
+        top = Math.max(12, rect.top - popoverHeight - 6);
+      }
+
+      activePopover.style.left = `${left}px`;
+      activePopover.style.top = `${top}px`;
+    }
+
+    function open(input) {
+      if (input.disabled || input.readOnly) return;
+      if (activeInput === input && activePopover) return;
+
+      destroyPopover();
+      activeInput = input;
+      activeInput.classList.add('is-picker-open');
+
+      const parsed = parseDate(input.value);
+      let currentYear = parsed.year;
+      let selectedMonth = parsed.monthIdx;
+
+      const popover = document.createElement('div');
+      popover.className = 'month-year-picker-popover';
+      activePopover = popover;
+
+      function renderPopover() {
+        popover.innerHTML = `
+          <div class="myp-header">
+            <button type="button" class="myp-nav-btn myp-prev-year" aria-label="Previous Year">&lsaquo;</button>
+            <span class="myp-year-title">${currentYear}</span>
+            <button type="button" class="myp-nav-btn myp-next-year" aria-label="Next Year">&rsaquo;</button>
+          </div>
+          <div class="myp-month-grid">
+            ${MONTHS.map((m, idx) => `
+              <button type="button" class="myp-month-btn ${selectedMonth === idx ? 'is-selected' : ''}" data-month="${idx}">${m}</button>
+            `).join('')}
+          </div>
+        `;
+
+        popover.querySelector('.myp-prev-year').addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentYear--;
+          renderPopover();
+        });
+
+        popover.querySelector('.myp-next-year').addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentYear++;
+          renderPopover();
+        });
+
+        popover.querySelectorAll('.myp-month-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const mIdx = parseInt(btn.dataset.month, 10);
+            selectedMonth = mIdx;
+            const formatted = `${MONTHS[mIdx]}, ${currentYear}`;
+            input.value = formatted;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            destroyPopover();
+          });
+        });
+
+        positionPopover();
+      }
+
+      document.body.appendChild(popover);
+      renderPopover();
+
+      setTimeout(() => {
+        document.addEventListener('click', handleOutsideClick, true);
+        window.addEventListener('resize', positionPopover);
+        window.addEventListener('scroll', positionPopover, true);
+      }, 10);
+    }
+
+    function attach(container = document) {
+      if (!container) return;
+      const selector = '.date-picker-input, [data-field="start"], [data-field="end"], [data-f="start"], [data-f="end"], [data-f="date"], #cl-input-date';
+      const inputs = container.querySelectorAll(selector);
+      inputs.forEach((input) => {
+        if (input.dataset.pickerAttached) return;
+        input.dataset.pickerAttached = 'true';
+        input.classList.add('date-picker-input');
+
+        input.addEventListener('focus', () => open(input));
+        input.addEventListener('click', () => open(input));
+      });
+    }
+
+    return { attach, open, close: destroyPopover };
+  })();
+
   // ---- Section form renderer (renders inline inside each active accordion slot) ------
   function renderForm() {
     activeSections.forEach((secId) => {
@@ -1272,6 +1452,7 @@
       }
 
       renderSingleForm(secId);
+      DatePicker.attach(formEl);
     });
   }
 
@@ -1291,6 +1472,7 @@
       projects: renderProjectsForm,
       certifications: renderCertificationsForm,
       languages: renderLanguagesForm,
+      links: renderLinksForm,
     };
 
     if (secId === 'personal') {
@@ -1683,11 +1865,11 @@
             <div class="field"><label>Location</label><input class="form-input" data-field="location" value="${entry.location || ''}" placeholder="New York, NY (or Remote)"></div>
             <div class="field">
               <label>Employment Period</label>
-              <div class="row gap-2 align-center">
-                <input class="form-input" data-field="start" value="${entry.start || ''}" placeholder="Jan 2021" style="width:110px">
-                <span class="text-muted">–</span>
-                <input class="form-input" data-field="end" value="${entry.end || ''}" placeholder="Present" style="width:110px" ${entry.current ? 'disabled' : ''}>
-                <label class="row gap-1 align-center text-xs" style="margin-left:8px;cursor:pointer">
+              <div class="date-input-group">
+                <input class="form-input date-picker-input" data-field="start" value="${entry.start || ''}" placeholder="Jan, 2021">
+                <span class="date-sep">–</span>
+                <input class="form-input date-picker-input" data-field="end" value="${entry.end || ''}" placeholder="Present" ${entry.current ? 'disabled' : ''}>
+                <label class="date-present-label">
                   <input type="checkbox" data-field="current" ${entry.current ? 'checked' : ''}> Present
                 </label>
               </div>
@@ -1834,8 +2016,8 @@
               <div class="field"><label>GPA / Honors</label><input class="form-input" data-f="gpa" value="${e.gpa || ''}" placeholder="3.8 / Magna Cum Laude"></div>
             </div>
             <div class="field-row">
-              <div class="field"><label>Start Date</label><input class="form-input" data-f="start" value="${e.start || ''}" placeholder="Sep 2017"></div>
-              <div class="field"><label>Graduation Date</label><input class="form-input" data-f="end" value="${e.end || ''}" placeholder="May 2021"></div>
+              <div class="field"><label>Start Date</label><input class="form-input date-picker-input" data-f="start" value="${e.start || ''}" placeholder="Sep, 2017"></div>
+              <div class="field"><label>Graduation Date</label><input class="form-input date-picker-input" data-f="end" value="${e.end || ''}" placeholder="May, 2021"></div>
             </div>
             <div class="field" style="margin-top:var(--space-2)">
               <label>Relevant Coursework or Honors</label>
@@ -2172,7 +2354,7 @@
               <div class="field"><label>Issuer</label><input class="form-input" data-f="issuer" value="${c.issuer || ''}" placeholder="Amazon Web Services"></div>
             </div>
             <div class="field-row">
-              <div class="field"><label>Date Issued</label><input class="form-input" data-f="date" value="${c.date || ''}" placeholder="2023"></div>
+              <div class="field"><label>Date Issued</label><input class="form-input date-picker-input" data-f="date" value="${c.date || ''}" placeholder="Oct, 2023"></div>
               <div class="field"><label>Credential URL</label><input class="form-input" data-f="url" value="${c.url || ''}" placeholder="credly.com/org/aws..."></div>
             </div>
           </div>
@@ -2335,6 +2517,99 @@
     els.form.appendChild(addBtn);
   }
 
+  function renderLinksForm(resume) {
+    const listWrap = document.createElement('div');
+    listWrap.className = 'entries-list';
+
+    (resume.links || []).forEach((l) => {
+      const isExpanded = expandedCards.has(l.id);
+      const cardWrap = document.createElement('div');
+      cardWrap.className = 'entry-row-wrap';
+      cardWrap.setAttribute('draggable', 'true');
+      cardWrap.dataset.entryId = l.id;
+
+      const titlePrimary = l.label ? l.label : (l.link || '(Not specified)');
+      const subtitle = l.label && l.link ? l.link : '';
+
+      cardWrap.innerHTML = `
+        <span class="entry-drag-handle" draggable="true" title="Drag to reorder">${DRAG_GRIP_SVG}</span>
+        <div class="entry-card ${!isExpanded ? 'is-collapsed' : ''}">
+          <div class="entry-card-head toggle-card-btn" role="button" tabindex="0" title="Click to expand/collapse">
+            <div class="entry-title-wrap">
+              <div class="entry-title-primary">${titlePrimary}</div>
+              ${subtitle ? `<div class="entry-subtitle-muted">${subtitle}</div>` : ''}
+            </div>
+            <span class="card-chevron ${isExpanded ? 'is-open' : ''}">${CHEVRON_SVG}</span>
+          </div>
+          <div class="entry-card-body" style="${!isExpanded ? 'display:none' : ''}">
+            <div class="field-row">
+              <div class="field"><label>Label</label><input class="form-input" data-f="label" value="${l.label || ''}" placeholder="LinkedIn : @username"></div>
+              <div class="field"><label>Link</label><input class="form-input" data-f="link" value="${l.link || ''}" placeholder="https://..."></div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn remove-entry-btn" title="Delete link" aria-label="Delete link">${TRASH_SVG}</button>`;
+
+      cardWrap.querySelector('.toggle-card-btn').addEventListener('click', () => {
+        if (expandedCards.has(l.id)) expandedCards.delete(l.id);
+        else expandedCards.add(l.id);
+        renderForm();
+      });
+
+      cardWrap.querySelectorAll('[data-f]').forEach((input) => {
+        const handler = (ev) => {
+          ResumeState.updateEntry('links', l.id, ev.target.dataset.f, ev.target.value);
+          const updated = (ResumeState.get().links || []).find((item) => item.id === l.id);
+          if (updated) {
+            const titleEl = cardWrap.querySelector('.entry-title-primary');
+            if (titleEl) {
+              titleEl.textContent = updated.label ? updated.label : (updated.link || '(Not specified)');
+            }
+            const subEl = cardWrap.querySelector('.entry-subtitle-muted');
+            if (subEl) {
+              subEl.textContent = updated.label && updated.link ? updated.link : '';
+            }
+          }
+        };
+        input.addEventListener('input', handler);
+        input.addEventListener('change', handler);
+      });
+
+      cardWrap.querySelector('.remove-entry-btn').addEventListener('click', async () => {
+        const confirmed = window.showConfirmModal
+          ? await window.showConfirmModal({
+              title: 'Confirm',
+              message: 'Are you sure want to permanently delete this link?',
+              confirmText: 'Yes, Delete!',
+              cancelText: 'Cancel',
+              danger: true,
+            })
+          : confirm('Are you sure want to permanently delete this link?');
+        if (!confirmed) return;
+        expandedCards.delete(l.id);
+        ResumeState.removeEntry('links', l.id);
+        renderForm();
+      });
+
+      listWrap.appendChild(cardWrap);
+    });
+
+    wireEntriesDragAndDrop(listWrap, 'links');
+    els.form.appendChild(listWrap);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-entry-btn';
+    addBtn.textContent = '+ Add Link';
+    addBtn.onclick = () => {
+      const newEntry = ResumeState.addEntry('links', { label: '', link: '' });
+      if (newEntry && newEntry.id) {
+        expandedCards.add(newEntry.id);
+      }
+      renderForm();
+    };
+    els.form.appendChild(addBtn);
+  }
+
   // ---- Custom Section Form Renderer (multi-instance, matching reference design) --------
   function renderCustomSectionForm(secId, resume) {
     const customSec = (resume[secId] && typeof resume[secId] === 'object') ? resume[secId] : { title: 'Untitled', items: [] };
@@ -2415,11 +2690,11 @@
             <div class="field-row">
               <div class="field">
                 <label>Start Date</label>
-                <input class="form-input" data-f="start" value="${item.start || ''}" placeholder="MM / YYYY">
+                <input class="form-input date-picker-input" data-f="start" value="${item.start || ''}" placeholder="Jan, 2022">
               </div>
               <div class="field">
                 <label>End Date</label>
-                <input class="form-input" data-f="end" value="${item.end || ''}" placeholder="MM / YYYY">
+                <input class="form-input date-picker-input" data-f="end" value="${item.end || ''}" placeholder="Oct, 2023">
               </div>
             </div>
             <div class="field" style="margin-top:var(--space-2)">
@@ -2760,7 +3035,7 @@
               <div class="field"><label>Organization / Issuer / Institution</label><input class="form-input" data-f="subtitle" value="${entry.subtitle || entry.org || ''}" placeholder="Organization Name"></div>
             </div>
             <div class="field-row">
-              <div class="field"><label>Date / Year</label><input class="form-input" data-f="date" value="${entry.date || ''}" placeholder="2022 - 2024"></div>
+              <div class="field"><label>Date / Year</label><input class="form-input date-picker-input" data-f="date" value="${entry.date || ''}" placeholder="Jan, 2022 - Oct, 2023"></div>
               <div class="field"><label>Location (Optional)</label><input class="form-input" data-f="location" value="${entry.location || ''}" placeholder="City, State"></div>
             </div>
             <div class="field" style="margin-top:var(--space-2)">
@@ -3897,6 +4172,7 @@
     // Subscribe to state changes
     ResumeState.subscribe(syncStateToInputs);
     syncStateToInputs(ResumeState.get());
+    DatePicker.attach(document.getElementById('view-coverletter-edit'));
   }
 
   // ---- Init -----------------------------------------------------------------
@@ -3956,6 +4232,7 @@
     renderSectionList();
     renderForm();
     renderPreview(ResumeState.get());
+    DatePicker.attach(document);
 
     const initialView = params.get('view') || (params.get('panel') === 'design' ? 'customize' : 'edit');
     showView(initialView);

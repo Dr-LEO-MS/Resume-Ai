@@ -155,5 +155,14 @@
       </div>
     </section>
     {{/if}}
+
+    {{#if links}}
+    <section class="resume-section section-links" aria-labelledby="sec-links-title">
+      <h2 id="sec-links-title" class="section-title">Links</h2>
+      <div class="pills-wrapper">
+        {{#each links}}{{#if link}}<a href="{{url link}}" target="_blank" rel="noopener noreferrer" class="skill-pill" title="{{label}}">{{label}}</a>{{/if}}{{/each}}
+      </div>
+    </section>
+    {{/if}}
   </main>
 </article>

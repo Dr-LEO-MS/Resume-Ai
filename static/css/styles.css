@@ -305,6 +305,139 @@ textarea.form-input:focus {
 .field textarea,
 textarea.form-input { resize: vertical; min-height: 5em; }
 
+/* ---- Date Input Group & Redesigned Month/Year DatePicker ----------------- */
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+.date-input-group .form-input {
+  flex: 1 1 0%;
+  min-width: 120px;
+}
+.date-sep {
+  color: var(--text-muted);
+  font-weight: 500;
+  user-select: none;
+}
+.date-present-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-left: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.date-picker-input {
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.date-picker-input:focus,
+.date-picker-input.is-picker-open {
+  border-color: #0088ff !important;
+  border-bottom: 2px solid #0088ff !important;
+  box-shadow: 0 0 0 3px rgba(0, 136, 255, 0.15);
+  background: var(--bg-raised) !important;
+  outline: none;
+}
+
+.month-year-picker-popover {
+  position: fixed;
+  width: 260px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  padding: 16px;
+  z-index: 10000;
+  user-select: none;
+  font-family: var(--font-body);
+  animation: mypFadeIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mypFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.myp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.myp-year-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.myp-nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  font-weight: 600;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+.myp-nav-btn:hover {
+  background: var(--bg-recessed);
+  color: var(--text);
+}
+
+.myp-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 6px;
+}
+
+.myp-month-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 8px 0;
+  border-radius: 20px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 150ms ease;
+}
+.myp-month-btn:hover {
+  background: var(--bg-recessed);
+  color: var(--text);
+}
+.myp-month-btn.is-selected {
+  background: #0088ff !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(0, 136, 255, 0.4);
+}
+
+html[data-theme='dark'] .month-year-picker-popover {
+  background: #1e2230;
+  border-color: #2e3346;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+html[data-theme='dark'] .myp-month-btn:hover {
+  background: #2a2f42;
+}
+
 /* Objective/Summary rich-text toolbar */
 .richtext-toolbar {
   display: flex;
@@ -1480,6 +1613,15 @@ html[data-theme='dark'] .diff-after { background: #1c3a27; color: #9edcb3; }
   background: color-mix(in srgb, var(--doc-accent-color, var(--theme-primary)) 12%, #f1f1ee);
   color: var(--doc-body-color, #333);
   margin: 0 4px 4px 0;
+}
+.resume-doc a.skill-pill,
+.resume-page a.skill-pill {
+  text-decoration: none;
+  cursor: pointer;
+}
+.resume-doc a.skill-pill:hover,
+.resume-page a.skill-pill:hover {
+  text-decoration: underline;
 }
 .resume-doc .doc-page-number,
 .resume-page .doc-page-number {

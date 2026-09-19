@@ -822,7 +822,8 @@ matching EXACTLY this shape:
   "skills": {"technical": [], "tools": [], "soft": []},
   "projects": [{"name": "", "description": "", "link": ""}],
   "certifications": [{"name": "", "issuer": "", "date": ""}],
-  "languages": [{"name": "", "level": ""}]
+  "languages": [{"name": "", "level": ""}],
+  "links": [{"label": "", "link": ""}]
 }
 
 Only include information that is actually present in the text — never invent \
@@ -869,6 +870,7 @@ def _mock_parse_resume_text(raw_text: str) -> Dict[str, Any]:
         "projects": [],
         "certifications": [],
         "languages": [],
+        "links": [],
     }
 
 

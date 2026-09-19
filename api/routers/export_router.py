@@ -333,6 +333,19 @@ def _render_section(section_id: str, resume: dict) -> str:
         pills = "".join(f'<span class="skill-pill">{esc(l.get("name",""))} · {esc(l.get("level",""))}</span>' for l in entries)
         return f'<section><div class="doc-section-title">{esc(title)}</div><div class="skills-wrapper">{pills}</div></section>'
 
+    if section_id == "links":
+        entries = resume.get("links") or []
+        if not entries:
+            return ""
+        title = _get_sec_title("links", "Links", resume)
+        pills = "".join(
+            f'<a class="skill-pill" href="{esc(_normalize_url(l.get("link") or l.get("url") or ""))}" target="_blank" rel="noopener noreferrer">{esc(l.get("label") or l.get("name") or _short_link(l.get("link") or l.get("url") or "")) }</a>'
+            if (l.get("link") or l.get("url"))
+            else f'<span class="skill-pill">{esc(l.get("label") or l.get("name") or "")}</span>'
+            for l in entries
+        )
+        return f'<section><div class="doc-section-title">{esc(title)}</div><div class="skills-wrapper">{pills}</div></section>'
+
     if section_id == "power_statement":
         stmt = resume.get("power_statement")
         if not stmt:
@@ -1281,6 +1294,20 @@ def export_docx(payload: schemas.ExportRequest, db: Session = Depends(get_db)):
             elif section_id == "languages" and resume.get("languages"):
                 add_section_title(_get_sec_title("languages", "Languages", resume))
                 doc.add_paragraph(", ".join(f"{l.get('name','')} ({l.get('level','')})" for l in resume["languages"]))
+
+            elif section_id == "links" and resume.get("links"):
+                add_section_title(_get_sec_title("links", "Links", resume))
+                for l in resume["links"]:
+                    label = l.get("label") or l.get("name") or ""
+                    url = l.get("link") or l.get("url") or ""
+                    p = doc.add_paragraph()
+                    if label:
+                        run = p.add_run(label)
+                        run.bold = True
+                    if url:
+                        sep = " — " if label else ""
+                        run_url = p.add_run(f"{sep}{url}")
+                        run_url.italic = True
 
             elif section_id == "power_statement" and resume.get("power_statement"):
                 add_section_title(_get_sec_title("power_statement", "Power Statement", resume))

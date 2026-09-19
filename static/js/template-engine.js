@@ -308,6 +308,17 @@ const TemplateEngine = (() => {
         return `<section class="doc-section" data-section-id="languages"><div class="doc-section-title">${esc(getSecTitle('languages', 'Languages', resume))}</div><div class="skills-wrapper">${resume.languages
           .map((l) => `<span class="skill-pill">${esc(l.name)} · ${esc(l.level)}</span>`)
           .join('')}</div></section>`;
+      case 'links':
+        if (!resume.links || !resume.links.length) return '';
+        return `<section class="doc-section" data-section-id="links"><div class="doc-section-title">${esc(getSecTitle('links', 'Links', resume))}</div><div class="skills-wrapper">${resume.links
+          .map((l) => {
+            const label = l.label || l.name || shortLinkLabel(l.link || l.url || '');
+            const url = l.link || l.url || '';
+            return url
+              ? `<a class="skill-pill" href="${esc(normalizeUrl(url))}" target="_blank" rel="noopener noreferrer" title="${esc(label)}">${esc(label)}</a>`
+              : `<span class="skill-pill">${esc(label)}</span>`;
+          })
+          .join('')}</div></section>`;
       case 'power_statement':
         if (!resume.power_statement) return '';
         return `<section class="doc-section" data-section-id="power_statement"><div class="doc-section-title">${esc(getSecTitle('power_statement', 'Power Statement', resume))}</div><div class="doc-entry-sub" style="font-weight:500; font-size:1.05em;">${formatMarkdownLite(resume.power_statement)}</div></section>`;
