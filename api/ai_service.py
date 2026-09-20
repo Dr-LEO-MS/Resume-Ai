@@ -258,27 +258,27 @@ there is genuinely nothing to improve, return it unchanged rather than \
 making a cosmetic edit just to seem useful."""
 
 
-SUGGEST_SKILLS_SYSTEM_PROMPT = """You are a technical recruiter who knows \
-exactly which skills real job postings list for a given role. Given the \
-candidate's current resume (job titles, summary, experience, and existing \
-skills), suggest skills they plausibly have based on their described work \
-but haven't listed — never generic soft skills, always specific, resume- \
-worthy, ATS-keyword-relevant terms (tools, frameworks, methodologies, \
-certifications-adjacent terms) that fit the pattern of what similar roles' \
-job postings require.
+SUGGEST_SKILLS_SYSTEM_PROMPT = """You are an expert technical recruiter and resume strategist who knows \
+exactly which skills real job postings require across industries.
+
+Given the candidate's current resume (job titles, summary, experience, and existing \
+skills), suggest relevant, high-impact skills they plausibly possess based on their work \
+history and target role, but haven't explicitly listed yet.
+
+You MUST provide balanced suggestions across ALL THREE categories:
+1. "technical": 3 to 6 core technical competencies, domain specializations, programming languages, architectures, or methodologies.
+2. "tools": 3 to 6 software tools, cloud platforms, developer utilities, frameworks, or SaaS applications relevant to their role.
+3. "soft": 3 to 4 leadership, communication, agile practices, problem solving, or workplace competencies that recruiters screen for.
 
 Return ONLY valid JSON, no markdown fences:
 {
-  "technical": ["<skill>", ...up to 6, only if plausible from their experience],
-  "tools": ["<skill>", ...up to 6],
-  "soft": ["<skill>", ...up to 3, only ones a recruiter would actually screen for]
+  "technical": ["<skill 1>", "<skill 2>", ...],
+  "tools": ["<tool 1>", "<tool 2>", ...],
+  "soft": ["<soft skill 1>", "<soft skill 2>", ...]
 }
 
-Never suggest a skill that contradicts or wildly exceeds what their \
-experience describes (e.g. don't suggest "Kubernetes" for someone with no \
-infrastructure/DevOps signal anywhere in their resume). If a category has \
-no confident suggestions, return an empty array for it rather than padding \
-with generic filler."""
+Never suggest a skill that wildly contradicts what their experience describes. \
+Ensure all suggestions are ATS-friendly, professional, and directly complementary to their career profile."""
 
 
 # ---------------------------------------------------------------------------
@@ -519,6 +519,71 @@ ROLE_KEYWORDS = {
     "sales": ["Quota Attainment", "Pipeline Management", "CRM (Salesforce)", "Negotiation", "Prospecting", "Revenue Growth"],
     "devops": ["CI/CD", "Kubernetes", "Terraform", "Infrastructure as Code", "Monitoring/Observability", "Cloud (AWS/GCP/Azure)"],
     "project manager": ["Stakeholder Management", "Risk Management", "Budget Management", "Agile/Scrum", "Cross-functional Leadership"],
+    "finance": ["Financial Modeling", "Variance Analysis", "Forecasting", "GAAP/IFRS", "Cash Flow Analysis"],
+    "human resources": ["Talent Acquisition", "Onboarding", "HR Compliance", "Performance Management", "Employee Relations"],
+}
+
+ROLE_SUGGESTED_SKILLS: Dict[str, Dict[str, List[str]]] = {
+    "software engineer": {
+        "technical": ["REST API Design", "Microservices", "System Architecture", "Unit & Integration Testing", "Data Structures", "Database Optimization", "GraphQL"],
+        "tools": ["Git & GitHub", "Docker", "CI/CD Pipelines", "AWS / Cloud", "PostgreSQL", "Redis", "Linux", "Kubernetes"],
+        "soft": ["Agile / Scrum", "Code Review", "Cross-functional Collaboration", "Technical Mentorship", "Problem Solving"],
+    },
+    "data scientist": {
+        "technical": ["Machine Learning", "Statistical Modeling", "A/B Testing", "Deep Learning", "Data Mining", "Feature Engineering", "NLP"],
+        "tools": ["Python", "SQL", "Pandas & NumPy", "Scikit-Learn", "PyTorch / TensorFlow", "Jupyter", "Tableau"],
+        "soft": ["Data Storytelling", "Stakeholder Communication", "Research & Experimentation", "Analytical Thinking", "Cross-functional Alignment"],
+    },
+    "data analyst": {
+        "technical": ["Data Modeling", "ETL Pipelines", "Statistical Analysis", "Business Intelligence", "Query Optimization", "Cohort Analysis"],
+        "tools": ["SQL", "Tableau", "Power BI", "Excel (Advanced / VBA)", "dbt", "Snowflake", "Google BigQuery"],
+        "soft": ["Stakeholder Reporting", "Requirements Gathering", "Data Storytelling", "Critical Thinking", "Problem Solving"],
+    },
+    "product manager": {
+        "technical": ["Product Strategy", "Market Analysis", "User Story Mapping", "A/B Testing", "Metrics & KPIs", "Feature Prioritization", "Competitive Analysis"],
+        "tools": ["Jira", "Figma", "Mixpanel", "Amplitude", "Confluence", "Notion", "Linear"],
+        "soft": ["Stakeholder Management", "Cross-functional Leadership", "Customer Empathy", "Strategic Communication", "Negotiation"],
+    },
+    "designer": {
+        "technical": ["UI/UX Design", "Design Systems", "Wireframing", "User Research", "Information Architecture", "Accessibility (WCAG)", "Interaction Design"],
+        "tools": ["Figma", "Adobe Creative Suite", "ProtoPie", "Sketch", "Storybook", "Miro", "Zeplin"],
+        "soft": ["Design Critique", "User Empathy", "Collaborative Problem Solving", "Visual Storytelling", "Stakeholder Presentation"],
+    },
+    "devops": {
+        "technical": ["Infrastructure as Code", "CI/CD Automation", "Container Orchestration", "Site Reliability Engineering", "Observability", "Network Security", "Cloud Architecture"],
+        "tools": ["Kubernetes", "Docker", "Terraform", "AWS / GCP / Azure", "Prometheus & Grafana", "GitHub Actions", "Ansible"],
+        "soft": ["Incident Management", "Root Cause Analysis", "DevOps Culture Evangelism", "Cross-Team Collaboration", "Post-Mortem Facilitation"],
+    },
+    "project manager": {
+        "technical": ["Sprint Planning", "Risk Management", "Budget Tracking", "Scope Management", "Process Optimization", "Resource Allocation", "Milestone Tracking"],
+        "tools": ["Jira", "Asana", "Trello", "Smartsheet", "MS Project", "Slack", "ClickUp"],
+        "soft": ["Agile Leadership", "Cross-Team Coordination", "Conflict Resolution", "Vendor Management", "Clear Communication"],
+    },
+    "marketing": {
+        "technical": ["Search Engine Optimization (SEO)", "Conversion Rate Optimization (CRO)", "Email Marketing", "Content Strategy", "Performance Marketing", "Paid Acquisition"],
+        "tools": ["Google Analytics 4", "HubSpot", "Google Ads", "SEMrush", "Mailchimp", "Meta Ads Manager", "Ahrefs"],
+        "soft": ["Creative Problem Solving", "Brand Storytelling", "Audience Engagement", "Cross-functional Alignment", "Campaign Planning"],
+    },
+    "sales": {
+        "technical": ["Sales Pipeline Management", "B2B Sales Strategy", "Contract Negotiation", "Lead Qualification", "Account Planning", "Revenue Forecasting", "Territory Management"],
+        "tools": ["Salesforce", "HubSpot CRM", "Outreach.io", "LinkedIn Sales Navigator", "ZoomInfo", "Gong"],
+        "soft": ["Relationship Building", "Active Listening", "Persuasive Presentation", "Resilience & Tenacity", "Customer Consultation"],
+    },
+    "finance": {
+        "technical": ["Financial Modeling", "Variance Analysis", "Forecasting & Budgeting", "GAAP/IFRS Compliance", "Cash Flow Analysis", "Financial Reporting"],
+        "tools": ["Excel (Advanced)", "QuickBooks", "NetSuite", "SAP ERP", "Bloomberg Terminal", "Power BI"],
+        "soft": ["Financial Acumen", "Attention to Detail", "Executive Presentation", "Risk Assessment", "Strategic Thinking"],
+    },
+    "human resources": {
+        "technical": ["Talent Acquisition", "Onboarding Programs", "HR Compliance & Labor Law", "Performance Management", "Compensation & Benefits", "Employee Retention"],
+        "tools": ["Workday", "Greenhouse", "Lever", "BambooHR", "LinkedIn Recruiter", "Culture Amp"],
+        "soft": ["Employee Relations", "Empathetic Communication", "Confidentiality & Ethics", "Conflict De-escalation", "Organizational Development"],
+    },
+    "general": {
+        "technical": ["Project Planning", "Data Analysis", "Process Improvement", "Strategic Planning", "Quality Assurance", "Workflow Automation"],
+        "tools": ["Microsoft 365 / Google Workspace", "Slack / Teams", "Trello / Notion", "Zoom", "Canva"],
+        "soft": ["Effective Communication", "Time Management", "Problem Solving", "Adaptability", "Team Collaboration", "Critical Thinking"],
+    },
 }
 
 
@@ -535,7 +600,12 @@ def _infer_role_bucket(resume: Dict[str, Any], target_role: Optional[str]) -> Op
     # Loose single-word fallbacks for common abbreviations/aliases
     aliases = {
         "swe": "software engineer", "developer": "software engineer", "engineer": "software engineer",
-        "sre": "devops", "pm": "product manager",
+        "frontend": "software engineer", "backend": "software engineer", "fullstack": "software engineer",
+        "full stack": "software engineer", "sre": "devops", "pm": "product manager",
+        "ux": "designer", "ui": "designer", "graphic": "designer",
+        "scrum": "project manager", "agile": "project manager",
+        "hr": "human resources", "recruiter": "human resources",
+        "finance": "finance", "financial": "finance", "accounting": "finance", "accountant": "finance",
     }
     for alias, bucket in aliases.items():
         if re.search(rf"\b{alias}\b", haystack):
@@ -715,19 +785,33 @@ def _mock_enhance_text(text: str, kind: str) -> str:
 
 
 def _mock_suggest_skills(resume: Dict[str, Any]) -> Dict[str, Any]:
-    role_bucket = _infer_role_bucket(resume, None)
-    if not role_bucket:
-        return {"technical": [], "tools": [], "soft": []}
-    resume_text = _all_resume_text(resume)
+    role_bucket = _infer_role_bucket(resume, None) or "general"
+    skills_map = ROLE_SUGGESTED_SKILLS.get(role_bucket, ROLE_SUGGESTED_SKILLS.get("general", {}))
+
     existing = set()
     skills = resume.get("skills")
     if isinstance(skills, dict):
         for v in skills.values():
-            existing.update(s.lower() for s in (v or []))
-    missing = [kw for kw in ROLE_KEYWORDS[role_bucket]
-               if kw.split("(")[0].strip().lower() not in resume_text
-               and kw.lower() not in existing]
-    return {"technical": missing[:6], "tools": [], "soft": []}
+            if isinstance(v, list):
+                existing.update(s.strip().lower() for s in v if isinstance(s, str))
+    elif isinstance(skills, list):
+        existing.update(s.strip().lower() for s in skills if isinstance(s, str))
+
+    def filter_skills(skill_list: List[str], limit: int) -> List[str]:
+        res = []
+        for s in skill_list:
+            clean = s.strip()
+            if clean.lower() not in existing:
+                res.append(clean)
+                if len(res) >= limit:
+                    break
+        return res
+
+    return {
+        "technical": filter_skills(skills_map.get("technical", []), 6),
+        "tools": filter_skills(skills_map.get("tools", []), 6),
+        "soft": filter_skills(skills_map.get("soft", []), 4),
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -132,6 +132,13 @@ const TemplateEngine = (() => {
     return (s.startsWith('+') ? '+' : '') + s.replace(/\D/g, '');
   }
 
+  const ICON_EMAIL_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>`;
+  const ICON_PHONE_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+  const ICON_LOCATION_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+  const ICON_LINKEDIN_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>`;
+  const ICON_GITHUB_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>`;
+  const ICON_WEBSITE_SVG = `<svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+
   const InlineHelpers = {
     handle: (u) => profileHandle(u),
     url: (u) => normalizeUrl(u),
@@ -140,11 +147,11 @@ const TemplateEngine = (() => {
 
   function renderContact(p) {
     const items = [];
-    if (p.email) items.push(`<a href="mailto:${esc(p.email)}" title="Send an email to ${esc(p.email)}" aria-label="Email ${esc(p.email)}">${esc(p.email)}</a>`);
+    if (p.email) items.push(`<a href="mailto:${esc(p.email)}" title="Send an email to ${esc(p.email)}" aria-label="Email ${esc(p.email)}">${ICON_EMAIL_SVG}${esc(p.email)}</a>`);
     const phone = (p.phone || '').trim();
     if (phone) {
       const tel = telHref(phone);
-      if (tel) items.push(`<a href="tel:${esc(tel)}" title="Call ${esc(phone)}" aria-label="Call phone number ${esc(phone)}">${esc(phone)}</a>`);
+      if (tel) items.push(`<a href="tel:${esc(tel)}" title="Call ${esc(phone)}" aria-label="Call phone number ${esc(phone)}">${ICON_PHONE_SVG}${esc(phone)}</a>`);
     }
 
     const locParts = [];
@@ -152,15 +159,15 @@ const TemplateEngine = (() => {
     if (p.postalCode && p.postalCode.trim()) locParts.push(p.postalCode.trim());
     if (p.country && p.country.trim()) locParts.push(p.country.trim());
     const formattedLoc = locParts.length ? locParts.join(', ') : (p.location || '');
-    if (formattedLoc) items.push(`<span>${esc(formattedLoc)}</span>`);
+    if (formattedLoc) items.push(`<span>${ICON_LOCATION_SVG}${esc(formattedLoc)}</span>`);
 
     [
-      ['linkedin', 'View LinkedIn profile'],
-      ['github', 'View GitHub profile'],
-      ['website', 'Visit portfolio website'],
-    ].forEach(([key, aria]) => {
+      ['linkedin', 'View LinkedIn profile', ICON_LINKEDIN_SVG],
+      ['github', 'View GitHub profile', ICON_GITHUB_SVG],
+      ['website', 'Visit portfolio website', ICON_WEBSITE_SVG],
+    ].forEach(([key, aria, iconSvg]) => {
       const url = (p[key] || '').trim();
-      if (url) items.push(`<a href="${esc(normalizeUrl(url))}" target="_blank" rel="noopener noreferrer" title="${aria}" aria-label="${aria}">${esc(profileHandle(url))}</a>`);
+      if (url) items.push(`<a href="${esc(normalizeUrl(url))}" target="_blank" rel="noopener noreferrer" title="${aria}" aria-label="${aria}">${iconSvg}${esc(profileHandle(url))}</a>`);
     });
     return items.join('');
   }
@@ -409,16 +416,18 @@ const TemplateEngine = (() => {
     else if (templateId === 'modern' || !templateId.startsWith('cl-')) templateId = 'cl-modern';
 
     const contactItems = [];
-    if (p.email) contactItems.push(`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`);
-    if (p.phone) contactItems.push(`<a href="tel:${esc(telHref(p.phone))}">${esc(p.phone)}</a>`);
+    if (p.email) contactItems.push(`<a href="mailto:${esc(p.email)}" title="Send an email to ${esc(p.email)}" aria-label="Email ${esc(p.email)}">${ICON_EMAIL_SVG}${esc(p.email)}</a>`);
+    if (p.phone) contactItems.push(`<a href="tel:${esc(telHref(p.phone))}" title="Call ${esc(p.phone)}" aria-label="Call phone number ${esc(p.phone)}">${ICON_PHONE_SVG}${esc(p.phone)}</a>`);
 
-    const locParts = [p.address, p.city, p.postalCode].filter(Boolean);
+    const locParts = [p.address, p.city, p.postalCode, p.country].filter(Boolean);
     const loc = locParts.length ? locParts.join(', ') : (p.location || '');
-    if (loc) contactItems.push(`<span>${esc(loc)}</span>`);
-    if (p.linkedin) contactItems.push(`<a href="${esc(normalizeUrl(p.linkedin))}" target="_blank" rel="noopener noreferrer">${esc(profileHandle(p.linkedin))}</a>`);
-    if (p.website) contactItems.push(`<a href="${esc(normalizeUrl(p.website))}" target="_blank" rel="noopener noreferrer">${esc(shortLinkLabel(p.website))}</a>`);
+    if (loc) contactItems.push(`<span>${ICON_LOCATION_SVG}${esc(loc)}</span>`);
+    if (p.linkedin) contactItems.push(`<a href="${esc(normalizeUrl(p.linkedin))}" target="_blank" rel="noopener noreferrer" title="View LinkedIn profile" aria-label="View LinkedIn profile">${ICON_LINKEDIN_SVG}${esc(profileHandle(p.linkedin))}</a>`);
+    if (p.github) contactItems.push(`<a href="${esc(normalizeUrl(p.github))}" target="_blank" rel="noopener noreferrer" title="View GitHub profile" aria-label="View GitHub profile">${ICON_GITHUB_SVG}${esc(profileHandle(p.github))}</a>`);
+    if (p.website) contactItems.push(`<a href="${esc(normalizeUrl(p.website))}" target="_blank" rel="noopener noreferrer" title="Visit portfolio website" aria-label="Visit portfolio website">${ICON_WEBSITE_SVG}${esc(shortLinkLabel(p.website))}</a>`);
 
     const contactBarHtml = contactItems.join(' &nbsp;·&nbsp; ');
+    const contactBarStackedHtml = contactItems.map(item => `<div>${item}</div>`).join('');
 
     const dateStr = cl.date || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const salutation = cl.salutation || (cl.hiringManager ? `Dear ${cl.hiringManager},` : 'Dear Hiring Team,');
@@ -472,9 +481,7 @@ const TemplateEngine = (() => {
             <div class="cl-doc-title">${esc(displayTitle)}</div>
           </div>
           <div class="cl-doc-contact-bar">
-            ${p.email ? `<div>${esc(p.email)}</div>` : ''}
-            ${p.phone ? `<div>${esc(p.phone)}</div>` : ''}
-            ${loc ? `<div>${esc(loc)}</div>` : ''}
+            ${contactBarStackedHtml}
           </div>
         </div>
         <div class="cl-doc-recipient-box">
@@ -505,9 +512,7 @@ const TemplateEngine = (() => {
             <div class="cl-doc-title">${esc(displayTitle)}</div>
           </div>
           <div class="cl-doc-contact-bar">
-            ${p.email ? `<div>${esc(p.email)}</div>` : ''}
-            ${p.phone ? `<div>${esc(p.phone)}</div>` : ''}
-            ${loc ? `<div>${esc(loc)}</div>` : ''}
+            ${contactBarStackedHtml}
           </div>
         </div>
         <div class="cl-doc-recipient-box">

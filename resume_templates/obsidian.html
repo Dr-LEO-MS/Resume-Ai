@@ -12,22 +12,22 @@
     </div>
     <ul class="contact-list" role="list" aria-label="Contact Information">
       {{#if personal.email}}
-      <li class="contact-item"><a href="mailto:{{personal.email}}" title="Send an email to {{personal.email}}" aria-label="Email {{personal.email}}">{{personal.email}}</a></li>
+      <li class="contact-item"><a href="mailto:{{personal.email}}" title="Send an email to {{personal.email}}" aria-label="Email {{personal.email}}"><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>{{personal.email}}</a></li>
       {{/if}}
       {{#if personal.phone}}
       <li class="contact-item"><a href="tel:{{phone personal.phone}}" title="Call {{personal.phone}}" aria-label="Call {{personal.phone}}">{{personal.phone}}</a></li>
       {{/if}}
       {{#if personal.location}}
-      <li class="contact-item"><span>{{personal.location}}</span></li>
+      <li class="contact-item"><span><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>{{personal.location}}</span></li>
       {{/if}}
       {{#if personal.linkedin}}
-      <li class="contact-item"><a href="{{url personal.linkedin}}" target="_blank" rel="noopener noreferrer" title="View LinkedIn profile" aria-label="View LinkedIn profile">{{handle personal.linkedin}}</a></li>
+      <li class="contact-item"><a href="{{url personal.linkedin}}" target="_blank" rel="noopener noreferrer" title="View LinkedIn profile" aria-label="View LinkedIn profile"><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>{{handle personal.linkedin}}</a></li>
       {{/if}}
       {{#if personal.github}}
-      <li class="contact-item"><a href="{{url personal.github}}" target="_blank" rel="noopener noreferrer" title="View GitHub profile" aria-label="View GitHub profile">{{handle personal.github}}</a></li>
+      <li class="contact-item"><a href="{{url personal.github}}" target="_blank" rel="noopener noreferrer" title="View GitHub profile" aria-label="View GitHub profile"><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>{{handle personal.github}}</a></li>
       {{/if}}
       {{#if personal.website}}
-      <li class="contact-item"><a href="{{url personal.website}}" target="_blank" rel="noopener noreferrer" title="Visit portfolio website" aria-label="Visit portfolio website">{{handle personal.website}}</a></li>
+      <li class="contact-item"><a href="{{url personal.website}}" target="_blank" rel="noopener noreferrer" title="Visit portfolio website" aria-label="Visit portfolio website"><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>{{handle personal.website}}</a></li>
       {{/if}}
     </ul>
   </header>

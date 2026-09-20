@@ -230,3 +230,50 @@ window.showToast = function(msg, type = 'default') {
   }, 3200);
 };
 
+/**
+ * Site-wide dropdown manager: ensures only one dropdown (export menu, user menu, etc.)
+ * is open at any time.
+ */
+window.closeAllDropdowns = function(exceptElement = null) {
+  // Export dropdown in builder
+  const exportMenu = document.getElementById('export-dropdown-menu');
+  const exportToggle = document.getElementById('export-dropdown-toggle');
+  if (exportMenu && exportMenu !== exceptElement && !exportMenu.contains(exceptElement)) {
+    exportMenu.classList.add('d-none');
+    if (exportToggle) exportToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  // User menu dropdown(s)
+  document.querySelectorAll('.user-menu-dropdown').forEach((menu) => {
+    if (menu !== exceptElement && !menu.contains(exceptElement)) {
+      menu.classList.remove('is-open');
+      const trigger = menu.closest('.user-menu')?.querySelector('.user-menu-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Generic dropdown menus
+  document.querySelectorAll('.dropdown-menu.is-open, [data-dropdown].is-open').forEach((menu) => {
+    if (menu !== exceptElement && !menu.contains(exceptElement)) {
+      menu.classList.remove('is-open');
+    }
+  });
+};
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.closest && (e.target.closest('#export-dropdown-menu') || e.target.closest('.user-menu-dropdown') || e.target.closest('.export-dropdown-wrap') || e.target.closest('.user-menu'))) {
+    return;
+  }
+  if (typeof window.closeAllDropdowns === 'function') {
+    window.closeAllDropdowns();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (typeof window.closeAllDropdowns === 'function') {
+      window.closeAllDropdowns();
+    }
+  }
+});
+

@@ -107,6 +107,9 @@
     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
     <path d="M3 3v5h5"></path>
   </svg>`;
+  const LINKEDIN_ICON_SVG = `<svg class="pf-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>`;
+  const GITHUB_ICON_SVG = `<svg class="pf-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>`;
+  const GLOBE_ICON_SVG = `<svg class="pf-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
   const CORE_SECTIONS = ['personal', 'summary', 'experience', 'education', 'skills'];
 
   function getSectionTitle(secId) {
@@ -1573,7 +1576,7 @@
           <input id="pf-phone" class="form-input" value="${p.phone || ''}" placeholder="+1 (555) 019-2834">
         </div>
         <div class="pf-field-wrap">
-          <label for="pf-linkedin">LinkedIn Profile URL</label>
+          <label for="pf-linkedin"><span class="pf-label-title">${LINKEDIN_ICON_SVG}LinkedIn Profile URL</span></label>
           <input id="pf-linkedin" class="form-input" value="${p.linkedin || ''}" placeholder="linkedin.com/in/alexmorgan">
         </div>
         <div class="pf-field-wrap">
@@ -1600,11 +1603,11 @@
 
       <div class="pf-more-details-panel ${isMoreDetailsOpen ? 'is-open' : ''}" id="pf-more-details-panel">
         <div class="pf-field-wrap">
-          <label for="pf-website">Portfolio / Website</label>
+          <label for="pf-website"><span class="pf-label-title">${GLOBE_ICON_SVG}Portfolio / Website</span></label>
           <input id="pf-website" class="form-input" value="${p.website || ''}" placeholder="alexmorgan.dev">
         </div>
         <div class="pf-field-wrap">
-          <label for="pf-github">GitHub Profile URL</label>
+          <label for="pf-github"><span class="pf-label-title">${GITHUB_ICON_SVG}GitHub Profile URL</span></label>
           <input id="pf-github" class="form-input" value="${p.github || ''}" placeholder="github.com/username">
         </div>
         <div class="pf-field-wrap">
@@ -2187,24 +2190,34 @@
         });
         if (!res.ok) throw new Error((await res.json()).detail || 'Request failed');
         const suggestions = await res.json();
-        const all = [...(suggestions.technical || []), ...(suggestions.tools || []), ...(suggestions.soft || [])];
+        const tech = suggestions.technical || [];
+        const tools = suggestions.tools || [];
+        const soft = suggestions.soft || [];
+        const all = [...tech, ...tools, ...soft];
         if (!all.length) {
           alert('No confident suggestions — try adding a job title or a bit more experience detail first, then try again.');
           return;
         }
+
+        const lines = [];
+        if (tech.length) lines.push(`• Technical: ${tech.join(', ')}`);
+        if (tools.length) lines.push(`• Tools: ${tools.join(', ')}`);
+        if (soft.length) lines.push(`• Soft Skills: ${soft.join(', ')}`);
+        const messageBody = `AI suggests adding the following skills across categories based on your experience:\n\n${lines.join('\n\n')}`;
+
         const proceed = window.showConfirmModal
           ? await window.showConfirmModal({
               title: 'Add Suggested Skills',
-              message: `AI suggests adding these skills based on your experience:\n\n${all.join(', ')}`,
-              confirmText: 'Add Skills',
+              message: messageBody,
+              confirmText: 'Add All Skills',
               cancelText: 'Cancel',
               danger: false,
             })
-          : confirm(`AI suggests adding these skills based on your experience:\n\n${all.join(', ')}\n\nAdd them all?`);
+          : confirm(`${messageBody}\n\nAdd them all?`);
         if (!proceed) return;
-        (suggestions.technical || []).forEach((s) => ResumeState.addSkill('technical', s));
-        (suggestions.tools || []).forEach((s) => ResumeState.addSkill('tools', s));
-        (suggestions.soft || []).forEach((s) => ResumeState.addSkill('soft', s));
+        tech.forEach((s) => ResumeState.addSkill('technical', s));
+        tools.forEach((s) => ResumeState.addSkill('tools', s));
+        soft.forEach((s) => ResumeState.addSkill('soft', s));
         renderForm(); // re-render so the new pills show up immediately
       } catch (err) {
         alert('AI suggest failed: ' + err.message);
@@ -3273,8 +3286,16 @@
       e.preventDefault();
       e.stopPropagation();
       const willOpen = els.exportDropdownMenu.classList.contains('d-none');
-      els.exportDropdownMenu.classList.toggle('d-none');
-      els.exportDropdownToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (typeof window.closeAllDropdowns === 'function') {
+        window.closeAllDropdowns(els.exportDropdownMenu);
+      }
+      if (willOpen) {
+        els.exportDropdownMenu.classList.remove('d-none');
+        els.exportDropdownToggle.setAttribute('aria-expanded', 'true');
+      } else {
+        els.exportDropdownMenu.classList.add('d-none');
+        els.exportDropdownToggle.setAttribute('aria-expanded', 'false');
+      }
     });
 
     els.exportDropdownMenu.addEventListener('click', (e) => {
@@ -3369,24 +3390,128 @@
     });
 
     document.getElementById('close-import-modal').addEventListener('click', () => {
+      _resetImportModal();
       els.importModal.classList.add('d-none');
     });
 
     document.getElementById('cancel-import-btn').addEventListener('click', () => {
+      _resetImportModal();
       els.importModal.classList.add('d-none');
     });
 
-    // PDF/DOCX are binary — reading them as text would just produce garbage,
-    // so those go straight to the server's extractor (pdfplumber / python-docx
-    // + AI parsing, see api/routers/import_router.py) instead of through the
-    // textarea. Plain .txt still loads into the textarea for quick editing.
     const importStatus = document.getElementById('import-file-status');
+    const importError = document.getElementById('import-error');
+    const stepUpload = document.getElementById('import-step-upload');
+    const stepReview = document.getElementById('import-step-review');
+    const reviewFields = document.getElementById('import-review-fields');
+    const warningsBox = document.getElementById('import-warnings');
     let pendingImportFile = null;
+    let pendingResumeData = null;
+
+    function _resetImportModal() {
+      pendingImportFile = null;
+      pendingResumeData = null;
+      els.importFileInput.value = '';
+      els.importTextInput.value = '';
+      els.importTextInput.placeholder = 'Paste your resume content or JSON data here...';
+      if (importStatus) importStatus.textContent = '';
+      if (importError) { importError.textContent = ''; importError.classList.add('d-none'); }
+      stepUpload.classList.remove('d-none');
+      stepReview.classList.add('d-none');
+      if (reviewFields) reviewFields.innerHTML = '';
+      if (warningsBox) { warningsBox.innerHTML = ''; warningsBox.classList.add('d-none'); }
+    }
+
+    function _showImportError(msg) {
+      if (importError) {
+        importError.textContent = msg;
+        importError.classList.remove('d-none');
+      }
+    }
+
+    function _buildReviewUI(resume, warnings) {
+      pendingResumeData = resume;
+      if (reviewFields) reviewFields.innerHTML = '';
+
+      if (warnings && warnings.length && warningsBox) {
+        warningsBox.innerHTML = warnings.map(w => `<div class="import-warning-item">⚠ ${w}</div>`).join('');
+        warningsBox.classList.remove('d-none');
+      }
+
+      const personal = resume.personal || {};
+      const fields = [
+        { label: 'Full Name', key: 'personal.fullName', value: personal.fullName || '' },
+        { label: 'Job Title', key: 'personal.title', value: personal.title || '' },
+        { label: 'Email', key: 'personal.email', value: personal.email || '' },
+        { label: 'Phone', key: 'personal.phone', value: personal.phone || '' },
+        { label: 'Location', key: 'personal.location', value: personal.location || '' },
+        { label: 'LinkedIn', key: 'personal.linkedin', value: personal.linkedin || '' },
+        { label: 'GitHub', key: 'personal.github', value: personal.github || '' },
+        { label: 'Website', key: 'personal.website', value: personal.website || '' },
+      ];
+
+      const grid = document.createElement('div');
+      grid.className = 'import-review-grid';
+
+      for (const f of fields) {
+        const row = document.createElement('div');
+        row.className = 'import-review-row';
+        row.innerHTML = `<label class="import-review-label">${f.label}</label>
+          <input type="text" class="form-input import-review-input" data-key="${f.key}" value="${(f.value || '').replace(/"/g, '&quot;')}">`;
+        grid.appendChild(row);
+      }
+
+      const summaryRow = document.createElement('div');
+      summaryRow.className = 'import-review-row import-review-row-wide';
+      summaryRow.innerHTML = `<label class="import-review-label">Summary</label>
+        <textarea class="form-input import-review-input" data-key="summary" rows="3">${resume.summary || ''}</textarea>`;
+      grid.appendChild(summaryRow);
+
+      const sections = [];
+      if ((resume.experience || []).length) sections.push(`${resume.experience.length} experience entries`);
+      if ((resume.education || []).length) sections.push(`${resume.education.length} education entries`);
+      const sk = resume.skills || {};
+      const skCount = (sk.technical||[]).length + (sk.tools||[]).length + (sk.soft||[]).length;
+      if (skCount) sections.push(`${skCount} skills`);
+      if ((resume.projects || []).length) sections.push(`${resume.projects.length} projects`);
+      if ((resume.certifications || []).length) sections.push(`${resume.certifications.length} certifications`);
+      if ((resume.languages || []).length) sections.push(`${resume.languages.length} languages`);
+
+      if (sections.length) {
+        const info = document.createElement('p');
+        info.className = 'text-muted text-sm mt-3';
+        info.textContent = 'Also extracted: ' + sections.join(', ') + '.';
+        grid.appendChild(info);
+      }
+
+      if (reviewFields) reviewFields.appendChild(grid);
+
+      stepUpload.classList.add('d-none');
+      stepReview.classList.remove('d-none');
+    }
+
+    function _applyReviewEdits() {
+      if (!pendingResumeData) return pendingResumeData;
+      const inputs = reviewFields.querySelectorAll('.import-review-input');
+      for (const inp of inputs) {
+        const key = inp.dataset.key;
+        const val = inp.value;
+        if (key === 'summary') {
+          pendingResumeData.summary = val;
+        } else if (key.startsWith('personal.')) {
+          const field = key.split('.')[1];
+          if (!pendingResumeData.personal) pendingResumeData.personal = {};
+          pendingResumeData.personal[field] = val;
+        }
+      }
+      return pendingResumeData;
+    }
 
     els.importFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       pendingImportFile = null;
       if (importStatus) importStatus.textContent = '';
+      if (importError) { importError.textContent = ''; importError.classList.add('d-none'); }
       if (!file) return;
 
       const isTxt = /\.txt$/i.test(file.name);
@@ -3397,7 +3522,6 @@
         return;
       }
 
-      // PDF / DOCX: hand off to the server on confirm rather than the textarea.
       pendingImportFile = file;
       els.importTextInput.value = '';
       els.importTextInput.placeholder = `"${file.name}" selected — click Parse & Import to extract it.`;
@@ -3409,15 +3533,18 @@
       const raw = els.importTextInput.value.trim();
 
       if (!pendingImportFile && !raw) {
-        alert('Please choose a file or paste resume text/JSON.');
+        _showImportError('Please choose a file or paste resume text/JSON.');
         return;
       }
 
+      if (importError) { importError.textContent = ''; importError.classList.add('d-none'); }
       confirmBtn.disabled = true;
       const originalLabel = confirmBtn.textContent;
       confirmBtn.textContent = 'Parsing…';
 
       try {
+        let resume, warnings = [];
+
         if (pendingImportFile) {
           const formData = new FormData();
           formData.append('file', pendingImportFile);
@@ -3429,24 +3556,53 @@
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.detail || 'Could not import that file.');
-          ResumeState.replace(data.resume);
+          resume = data.resume;
+          warnings = data.warnings || [];
         } else if (raw.startsWith('{') && raw.endsWith('}')) {
-          ResumeState.replace(JSON.parse(raw));
+          try {
+            resume = JSON.parse(raw);
+          } catch (_) {
+            throw new Error('Invalid JSON — check the pasted text and try again.');
+          }
         } else {
-          ResumeState.replace(parseResumeText(raw));
+          const token = (typeof Auth !== 'undefined' && Auth.isLoggedIn()) ? Auth.getToken() : null;
+          const res = await fetch('/api/import/resume-text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ text: raw }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.detail || 'Could not parse the pasted text.');
+          resume = data.resume;
+          warnings = data.warnings || [];
         }
 
-        pendingImportFile = null;
-        els.importModal.classList.add('d-none');
-        renderSectionList();
-        renderForm();
-        alert('Resume imported successfully!');
+        _buildReviewUI(resume, warnings);
       } catch (err) {
-        alert(err.message || 'Could not parse resume data. Please verify the file or text and try again.');
+        _showImportError(err.message || 'Could not parse resume data. Please verify the file or text and try again.');
       } finally {
         confirmBtn.disabled = false;
         confirmBtn.textContent = originalLabel;
       }
+    });
+
+    document.getElementById('import-back-btn').addEventListener('click', () => {
+      stepReview.classList.add('d-none');
+      stepUpload.classList.remove('d-none');
+      if (warningsBox) { warningsBox.innerHTML = ''; warningsBox.classList.add('d-none'); }
+    });
+
+    document.getElementById('import-accept-btn').addEventListener('click', () => {
+      const finalData = _applyReviewEdits();
+      if (!finalData) return;
+      ResumeState.replace(finalData);
+      _resetImportModal();
+      els.importModal.classList.add('d-none');
+      renderSectionList();
+      renderForm();
     });
   }
 

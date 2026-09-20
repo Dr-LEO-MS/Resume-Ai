@@ -215,12 +215,17 @@ const Auth = (() => {
       if (trigger && dropdown) {
         trigger.addEventListener('click', (e) => {
           e.stopPropagation();
-          const open = dropdown.classList.toggle('is-open');
-          trigger.setAttribute('aria-expanded', open);
-        });
-        document.addEventListener('click', () => {
-          dropdown.classList.remove('is-open');
-          trigger.setAttribute('aria-expanded', 'false');
+          const isCurrentlyOpen = dropdown.classList.contains('is-open');
+          if (typeof window.closeAllDropdowns === 'function') {
+            window.closeAllDropdowns(dropdown);
+          }
+          if (!isCurrentlyOpen) {
+            dropdown.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+          } else {
+            dropdown.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+          }
         });
       }
       // Logout

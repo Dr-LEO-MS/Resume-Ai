@@ -757,3 +757,44 @@ def test_links_section_export_and_discovery():
         assert "links" in parsed
         assert isinstance(parsed["links"], list)
 
+
+def test_ai_suggest_skills_all_categories():
+    from api.ai_service import suggest_skills, _mock_suggest_skills
+
+    resume = {
+        **sample_resume,
+        "personal": {
+            **sample_resume["personal"],
+            "title": "Senior Software Engineer",
+        },
+        "skills": {
+            "technical": ["Python", "Django"],
+            "tools": ["Git"],
+            "soft": ["Communication"],
+        },
+    }
+
+    # Verify direct service call provides technical, tools, and soft categories
+    result = suggest_skills(resume)
+    assert "technical" in result
+    assert "tools" in result
+    assert "soft" in result
+    assert len(result["technical"]) > 0
+    assert len(result["tools"]) > 0
+    assert len(result["soft"]) > 0
+    # None of the already listed skills should be suggested
+    assert "python" not in [s.lower() for s in result["technical"]]
+    assert "git" not in [s.lower() for s in result["tools"]]
+
+    # Verify through API router endpoint
+    with TestClient(main.app) as c:
+        # Register and login to test authenticated API endpoint
+        c.post("/api/auth/register", json={"email": "skills_user@example.com", "password": "password123"})
+        res = c.post("/api/ai/suggest-skills", json={"resume": resume})
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data["technical"]) > 0
+        assert len(data["tools"]) > 0
+        assert len(data["soft"]) > 0
+
+

@@ -531,30 +531,46 @@
 
   <!-- Modal for Importing Resume Data -->
   <div class="modal-backdrop d-none" id="import-modal">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width:560px;">
       <div class="modal-head">
         <h3>Import Existing Resume</h3>
         <button class="icon-btn" id="close-import-modal">✕</button>
       </div>
-      <div class="modal-body">
-        <p class="text-muted text-sm mb-3">
-          Upload an existing resume (PDF or Word) and AI will extract your contact info, summary, experience, education, and skills — or paste plain text / JSON below instead.
-        </p>
 
-        <div class="field mb-4">
-          <label for="import-file-input">Upload PDF, Word, or Text File</label>
-          <input type="file" id="import-file-input" accept=".pdf,.docx,.txt" class="form-input" aria-label="Upload PDF, Word, or Text File">
-          <p class="field-hint" id="import-file-status"></p>
+      <!-- Step 1: Upload / paste -->
+      <div id="import-step-upload">
+        <div class="modal-body">
+          <p class="text-muted text-sm mb-3">
+            Upload a resume (PDF, Word, RTF, or plain text) and AI will extract your details — or paste text / JSON below.
+          </p>
+          <div class="field mb-4">
+            <label for="import-file-input">Upload Resume File</label>
+            <input type="file" id="import-file-input" accept=".pdf,.docx,.doc,.rtf,.txt" class="form-input" aria-label="Upload Resume File">
+            <p class="field-hint" id="import-file-status"></p>
+          </div>
+          <div class="field">
+            <label for="import-text-input">Or Paste Resume Text / JSON</label>
+            <textarea id="import-text-input" rows="8" placeholder="Paste your resume content or JSON data here..."></textarea>
+          </div>
+          <div class="import-error d-none" id="import-error" role="alert"></div>
         </div>
-
-        <div class="field">
-          <label for="import-text-input">Or Paste Resume Text / JSON</label>
-          <textarea id="import-text-input" rows="8" placeholder="Paste your resume content or JSON data here..."></textarea>
+        <div class="modal-foot row gap-3 justify-end">
+          <button class="btn btn-ghost btn-sm" id="cancel-import-btn">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="confirm-import-btn">Parse & Import</button>
         </div>
       </div>
-      <div class="modal-foot row gap-3 justify-end">
-        <button class="btn btn-ghost btn-sm" id="cancel-import-btn">Cancel</button>
-        <button class="btn btn-primary btn-sm" id="confirm-import-btn">Parse & Import</button>
+
+      <!-- Step 2: Review parsed data before committing -->
+      <div id="import-step-review" class="d-none">
+        <div class="modal-body">
+          <p class="text-muted text-sm mb-2">Review the extracted data before importing. You can edit any field.</p>
+          <div class="import-warnings d-none" id="import-warnings" role="alert"></div>
+          <div class="import-review-fields" id="import-review-fields"></div>
+        </div>
+        <div class="modal-foot row gap-3 justify-end">
+          <button class="btn btn-ghost btn-sm" id="import-back-btn">Back</button>
+          <button class="btn btn-primary btn-sm" id="import-accept-btn">Accept & Import</button>
+        </div>
       </div>
     </div>
   </div>
